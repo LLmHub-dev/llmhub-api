@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.status import HTTP_403_FORBIDDEN
 import fastapi
+from FastAPI_Dir.router import route
 
 API_KEY = "llmhub.dev"  # Replace with your actual API key
 security = HTTPBearer()
@@ -21,9 +22,11 @@ app = fastapi.FastAPI(dependencies=[Depends(verify_api_key)])
 
 
 @app.get("/v1/chat")
-async def index():
+async def index(message: str):
+    model=route(message)
+
     return {
-        "info": "Try /hello/Prateek for parameterized route.",
+        "model": model,
     }
 
 
