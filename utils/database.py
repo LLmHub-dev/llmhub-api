@@ -7,6 +7,7 @@ import urllib.parse
 def get_mongo_client(uri):
     uri = load_mongo_uri()
     mongo_client = initialize_mongo_client(uri)
+    return mongo_client
 
 def load_mongo_uri(file_path='mongo_uri.txt'):
     """Load MongoDB URI from a file."""

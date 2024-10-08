@@ -4,6 +4,7 @@ from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.status import HTTP_403_FORBIDDEN
 from FastAPI_Dir.router import route
+from fastapi.responses import JSONResponse
 from utils.database import get_mongo_client
 
 
