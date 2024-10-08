@@ -3,9 +3,16 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import urllib.parse
 
+
+def get_mongo_client(uri):
+    uri = load_mongo_uri()
+    mongo_client = initialize_mongo_client(uri)
+
 def load_mongo_uri(file_path='mongo_uri.txt'):
     """Load MongoDB URI from a file."""
     try:
+        if os.getenv('MONGO_URI'):
+            return os.getenv('MONGO_URI')
         with open(file_path, 'r') as file:
             uri = file.readline().strip()
         return uri

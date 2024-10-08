@@ -74,26 +74,30 @@ def call_genai_model(prompt, user_input):
         logging.error(f"Error generating content with GenAI model: {e}")
         raise
 
-def route(msg):
+def route(msg,mongo_client):
     """
     Main function to initialize MongoDB, fetch route config, generate prompt, and call the GenAI model.
     """
     # Load MongoDB URI and initialize client
-    uri = load_mongo_uri()
-    mongo_client = initialize_mongo_client(uri)
+
     logging.info("MongoDB client initialized successfully.")
+
     system_prompt= get_sys_prompt_config(mongo_client)
+
     if system_prompt=={}:
-        # Fetch models and intents from route config
+      
         models, intent = fetch_model_and_intent(mongo_client)
+
         logging.info(f"Models and intents fetched: {models}, {intent}")
-        # Generate dynamic prompt
+   
         system_prompt = generate_prompt(models, intent)
+
         logging.info(f"Generated system prompt: {system_prompt}")
+
         write_sys_prompt_config(mongo_client, system_prompt)
     else:
         logging.info(f"Skipped generating system prompt: {system_prompt}")
-    # Load API key and configure GenAI
+   
     api_key = load_api_key()
     configure_genai(api_key)
     # Call the GenAI model with the prompt
