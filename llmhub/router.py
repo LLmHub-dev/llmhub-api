@@ -114,9 +114,8 @@ def route(msg,mongo_client):
         logging.info(f"Generated system prompt: {system_prompt}")
         write_sys_prompt_config(mongo_client, system_prompt)
 
-
     else:
-        logging.info(f"Skipped generating system prompt: {system_prompt}")
+        logging.info(f"Skipped route config:")
     api_key = load_api_key()
     configure_genai(api_key)
     # Call the GenAI model with the prompt
