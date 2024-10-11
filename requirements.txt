@@ -6,3 +6,5 @@ azure-functions
 fastapi
 pymongo[srv]
 google-generativeai
+pyjwt
+passlib

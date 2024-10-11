@@ -6,7 +6,7 @@ from starlette.status import HTTP_403_FORBIDDEN
 from llmhub.router import route
 from fastapi.responses import JSONResponse
 from utils.database import get_mongo_client
-
+from utils.auth import verify_token
 
 API_KEY = os.getenv("API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
@@ -14,15 +14,13 @@ MONGO_URI = os.getenv("MONGO_URI")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
-
 app = FastAPI()
 security = HTTPBearer()
 
-
-
 async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
-    if credentials.credentials != API_KEY:
+    print('hi',credentials.credentials)
+    authorized=verify_token(credentials.credentials)
+    if authorized != True:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Invalid API Key",
@@ -31,10 +29,8 @@ async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(se
 async def get_db_client():
     return get_mongo_client(MONGO_URI)
 
-
-
 @app.get("/v1/chat")
-async def index(message: str, db_client=Depends(get_db_client)):
+async def index(message: str, db_client=Depends(get_db_client),api_key_verification=Depends(verify_api_key)):
     model = route(message, db_client)
     return {"model": model}
 
