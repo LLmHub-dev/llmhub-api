@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.status import HTTP_403_FORBIDDEN
-from FastAPI_Dir.router import route
+from llmhub.router import route
 from fastapi.responses import JSONResponse
 from utils.database import get_mongo_client
 
@@ -11,12 +11,15 @@ from utils.database import get_mongo_client
 API_KEY = os.getenv("API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 
-# Set up structured logging
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-app = FastAPI()
 
+
+app = FastAPI()
 security = HTTPBearer()
+
+
 
 async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
     if credentials.credentials != API_KEY:
@@ -27,6 +30,8 @@ async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(se
 
 async def get_db_client():
     return get_mongo_client(MONGO_URI)
+
+
 
 @app.get("/v1/chat")
 async def index(message: str, db_client=Depends(get_db_client)):
