@@ -56,6 +56,9 @@ def get_sys_prompt_config(
     client, db_name="Routers", collection_name="route-config", mode="automatic"
 ):
     """Fetch the route configuration from MongoDB."""
+
+    if mode == "automatic":
+        return "You are a routing agent. Based on the provided instruction, if the instruction is related to coding, output 'claude-3.5-sonnet'. if the instruction is related to general, output 'gemini-1.5-flash'. if the instruction is related to reasoning, output 'gpt-4o-mini'. Do not include any additional text or information in your response. Your output must strictly be one of the following: 'claude-3.5-sonnet', 'gemini-1.5-flash', 'gpt-4o-mini'."
     try:
         database = client[db_name]
         collection = database[collection_name]
