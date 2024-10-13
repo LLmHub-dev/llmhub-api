@@ -39,7 +39,7 @@ async def get_db_client():
 
 @app.get("/v1/chat")
 async def index(message: str, db_client=Depends(get_db_client)):
-    model = await route(message, db_client)
+    model = route(message, db_client)
     return {"model": model}
 
 
