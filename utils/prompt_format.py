@@ -5,12 +5,10 @@ def create_dynamic_prompt(dict_keys, dict_values):
     if not dict_keys or not dict_values:
         raise ValueError("dict_keys and dict_values cannot be empty.")
 
-
     conditions = []
     for key, value in zip(dict_keys, dict_values):
         conditions.append(f"if the instruction is related to {key}, output '{value}'")
     condition_str = ". ".join(conditions)
-
 
     possible_outputs = []
     for value in dict_values:

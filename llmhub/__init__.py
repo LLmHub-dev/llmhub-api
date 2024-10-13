@@ -12,31 +12,41 @@ API_KEY = os.getenv("API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
-app = FastAPI()
 security = HTTPBearer()
 
-async def verify_api_key(credentials: HTTPAuthorizationCredentials = Security(security)):
-    print('hi',credentials.credentials)
-    authorized=verify_token(credentials.credentials)
+
+async def verify_api_key(
+    credentials: HTTPAuthorizationCredentials = Security(security),
+):
+    authorized = verify_token(credentials.credentials)
     if authorized != True:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Invalid API Key",
         )
 
+
+app = FastAPI(dependencies=[Depends(verify_api_key)])
+
+
 async def get_db_client():
     return get_mongo_client(MONGO_URI)
 
+
 @app.get("/v1/chat")
-async def index(message: str, db_client=Depends(get_db_client),api_key_verification=Depends(verify_api_key)):
-    model = route(message, db_client)
+async def index(message: str, db_client=Depends(get_db_client)):
+    model = await route(message, db_client)
     return {"model": model}
+
 
 @app.get("/v1/hello/{name}")
 async def get_name(name: str):
     return {"name": name}
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
