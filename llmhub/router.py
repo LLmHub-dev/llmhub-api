@@ -9,7 +9,7 @@ from utils.database import (
     get_sys_prompt_config,
     write_sys_prompt_config,
 )
-from utils.prompt_format import create_dynamic_prompt
+from utils.prompt_format import create_route_tag
 
 
 logging.basicConfig(
@@ -48,44 +48,13 @@ def configure_genai(api_key):
         raise
 
 
-def fetch_model_and_intent(mongo_client):
-    """
-    Fetch model names and intents from MongoDB route configuration.
-    """
-
-    try:
-        results = get_mode_config(mongo_client)
-        models = results.values()
-        intent = results.keys()
-        return models, intent
-
-    except Exception as e:
-        logging.error(f"Error fetching route configuration from MongoDB: {e}")
-        raise
-
-
-def generate_prompt(models, intent):
-    """
-    Generate a dynamic prompt using the provided models and intents.
-    """
-
-    try:
-        updated_prompt_data = create_dynamic_prompt(intent, models)
-        logging.info("Dynamic prompt generated successfully.")
-        return updated_prompt_data
-
-    except Exception as e:
-        logging.error(f"Error generating dynamic prompt: {e}")
-        raise
-
-
-def call_genai_model(prompt, user_input):
+def call_genai_model(user_input):
     """
     Call the Generative AI model with the system prompt and user input.
     """
 
     try:
-        model = GenerativeModel("gemini-1.5-flash", system_instruction=prompt)
+        model = GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(user_input)
         logging.info("Model response received successfully.")
         return response.text
@@ -95,27 +64,15 @@ def call_genai_model(prompt, user_input):
         raise
 
 
-def route(msg, mongo_client):
+def route(msg, mongo_client, model="automatic"):
     """
     Main function to initialize MongoDB, fetch route config, generate prompt, and call the GenAI model.
     """
     # Load MongoDB URI and initialize client
-
-    system_prompt = get_sys_prompt_config(mongo_client)
-
-    if system_prompt == {}:
-
-        models, intent = fetch_model_and_intent(mongo_client)
-        logging.info(f"Models and intents fetched: {models}, {intent}")
-        system_prompt = generate_prompt(models, intent)
-        logging.info(f"Generated system prompt: {system_prompt}")
-        write_sys_prompt_config(mongo_client, system_prompt)
-
-    else:
-        logging.info(f"Skipped route config:")
+    route_info = get_sys_prompt_config(mongo_client)
+    if not route_info:
+        route_info = create_route_tag(mongo_client)
     api_key = load_api_key()
     configure_genai(api_key)
-    # Call the GenAI model with the prompt
-    user_input = msg
-    response_text = call_genai_model(system_prompt, user_input)
+    response_text = call_genai_model(route_info + " " + msg)
     return response_text
