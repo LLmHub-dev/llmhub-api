@@ -37,7 +37,7 @@ async def get_db_client():
     return get_mongo_client(MONGO_URI)
 
 
-@app.get("/v1/chat")
+@app.get("/v1/chat/completions")
 async def index(message: str, db_client=Depends(get_db_client)):
     model = route(message, db_client)
     model = model.strip()
