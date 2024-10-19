@@ -8,3 +8,5 @@ pymongo[srv]
 google-generativeai
 pyjwt
 passlib
+openai
+pydantic
