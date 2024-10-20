@@ -6,7 +6,9 @@ import urllib.parse
 
 def get_mongo_client() -> MongoClient:
     uri = load_mongo_uri()  # Assuming this function loads the MongoDB URI
-    mongo_client = initialize_mongo_client(uri)  # Assuming this initializes a MongoClient
+    mongo_client = initialize_mongo_client(
+        uri
+    )  # Assuming this initializes a MongoClient
     return mongo_client
 
 
@@ -63,7 +65,7 @@ def get_sys_prompt_config(
             raise Exception(f"No route configuration found for mode: {mode}")
     except Exception as e:
         print(e)
-        raise Exception(f"Error retrieving route configuration: {e}",e)
+        raise Exception(f"Error retrieving route configuration: {e}", e)
 
 
 def write_sys_prompt_config(

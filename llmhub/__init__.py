@@ -63,8 +63,9 @@ async def index(
     content = request.messages[-1].content
     model = route(content, db)
     model = model.strip()
-    response=RouterChatCompletion(model=model,request=request)
+    response = RouterChatCompletion(model=model, request=request)
     return response
+
 
 @app.get("/v1/hello/{name}")
 async def get_name(name: str):
