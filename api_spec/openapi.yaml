@@ -166,7 +166,7 @@ paths:
                         ]
                       }
                     ],
-                    "max_tokens": 300
+                    "max_completion_tokens": 300
                   }'
               python: |
                 from openai import OpenAI
@@ -189,7 +189,7 @@ paths:
                             ],
                         }
                     ],
-                    max_tokens=300,
+                    max_completion_tokens=300,
                 )
 
                 print(response.choices[0])
@@ -729,7 +729,7 @@ paths:
                   -d '{
                     "model": "VAR_model_id",
                     "prompt": "Say this is a test",
-                    "max_tokens": 7,
+                    "max_completion_tokens": 7,
                     "temperature": 0
                   }'
               python: |
@@ -739,7 +739,7 @@ paths:
                 client.completions.create(
                   model="VAR_model_id",
                   prompt="Say this is a test",
-                  max_tokens=7,
+                  max_completion_tokens=7,
                   temperature=0
                 )
               node.js: |-
@@ -751,7 +751,7 @@ paths:
                   const completion = await openai.completions.create({
                     model: "VAR_model_id",
                     prompt: "Say this is a test.",
-                    max_tokens: 7,
+                    max_completion_tokens: 7,
                     temperature: 0,
                   });
 
@@ -788,7 +788,7 @@ paths:
                   -d '{
                     "model": "VAR_model_id",
                     "prompt": "Say this is a test",
-                    "max_tokens": 7,
+                    "max_completion_tokens": 7,
                     "temperature": 0,
                     "stream": true
                   }'
@@ -799,7 +799,7 @@ paths:
                 for chunk in client.completions.create(
                   model="VAR_model_id",
                   prompt="Say this is a test",
-                  max_tokens=7,
+                  max_completion_tokens=7,
                   temperature=0,
                   stream=True
                 ):
@@ -8962,7 +8962,7 @@ components:
 
             When used with `n`, `best_of` controls the number of candidate completions and `n` specifies how many to return – `best_of` must be greater than `n`.
 
-            **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_tokens` and `stop`.
+            **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_completion_tokens` and `stop`.
         echo:
           type: boolean
           default: false
@@ -9002,16 +9002,16 @@ components:
             Include the log probabilities on the `logprobs` most likely output tokens, as well the chosen tokens. For example, if `logprobs` is 5, the API will return a list of the 5 most likely tokens. The API will always return the `logprob` of the sampled token, so there may be up to `logprobs+1` elements in the response.
 
             The maximum value for `logprobs` is 5.
-        max_tokens:
+        max_completion_tokens:
           type: integer
           minimum: 0
           default: 16
           example: 16
           nullable: true
-          description: &completions_max_tokens_description |
+          description: &completions_max_completion_tokens_description |
             The maximum number of [tokens](/tokenizer) that can be generated in the completion.
 
-            The token count of your prompt plus `max_tokens` cannot exceed the model's context length. [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for counting tokens.
+            The token count of your prompt plus `max_completion_tokens` cannot exceed the model's context length. [Example Python code](https://cookbook.openai.com/examples/how_to_count_tokens_with_tiktoken) for counting tokens.
         n:
           type: integer
           minimum: 1
@@ -9022,7 +9022,7 @@ components:
           description: &completions_completions_description |
             How many completions to generate for each prompt.
 
-            **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_tokens` and `stop`.
+            **Note:** Because this parameter generates many completions, it can quickly consume your token quota. Use carefully and ensure that you have reasonable settings for `max_completion_tokens` and `stop`.
         presence_penalty:
           type: number
           default: 0
@@ -9853,7 +9853,7 @@ components:
           minimum: 0
           maximum: 20
           nullable: true
-        max_tokens:
+        max_completion_tokens:
           description: |
             The maximum number of [tokens](/tokenizer) that can be generated in the chat completion. This value can be used to control [costs](https://openai.com/api/pricing/) for text generated via API.
 
@@ -9890,7 +9890,7 @@ components:
 
             Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the message the model generates is valid JSON.
 
-            **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
+            **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_completion_tokens` or the conversation exceeded the max context length.
           oneOf:
             - $ref: "#/components/schemas/ResponseFormatText"
             - $ref: "#/components/schemas/ResponseFormatJsonObject"
@@ -12130,7 +12130,7 @@ components:
 
         Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the message the model generates is valid JSON.
 
-        **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_tokens` or the conversation exceeded the max context length.
+        **Important:** when using JSON mode, you **must** also instruct the model to produce JSON yourself via a system or user message. Without this, the model may generate an unending stream of whitespace until the generation reaches the token limit, resulting in a long-running and seemingly "stuck" request. Also note that the message content may be partially cut off if `finish_reason="length"`, which indicates the generation exceeded `max_completion_tokens` or the conversation exceeded the max context length.
       oneOf:
         - type: string
           description: >
@@ -13566,7 +13566,7 @@ components:
               enum:
                 [
                   "content_filter",
-                  "max_tokens",
+                  "max_completion_tokens",
                   "run_cancelled",
                   "run_expired",
                   "run_failed",

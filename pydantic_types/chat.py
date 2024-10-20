@@ -71,6 +71,7 @@ class ChatCompletion(BaseModel):
     )
 
 
+# metadata,logit_bias
 class CreateChatCompletionRequest(BaseModel):
     model: str = Field(..., description="The ID of the model to use.")
     messages: List[Message] = Field(
@@ -96,9 +97,9 @@ class CreateChatCompletionRequest(BaseModel):
     top_logprobs: int = Field(
         1, description="The maximum number of log probability entries to include."
     )
-    max_tokens: int = Field(
+    max_completion_tokens: int = Field(
         None,
-        description="The maximum number of tokens to generate in the completion. The token count of your prompt plus max_tokens cannot exceed the model's context length.",
+        description="The maximum number of tokens to generate in the completion. The token count of your prompt plus max_completion_tokens cannot exceed the model's context length.",
     )
     presence_penalty: float = Field(
         0.0,

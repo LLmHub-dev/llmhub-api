@@ -6,7 +6,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
 
 
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import (
+    HTTP_403_FORBIDDEN,
+    HTTP_400_BAD_REQUEST,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
 
 
 from llmhub.router import route
@@ -54,7 +58,7 @@ def verify_api_key(
 app = FastAPI(dependencies=[Depends(verify_api_key)])
 
 
-@app.api_route("/v1/chat/completions", methods=["POST","GET"])
+@app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
     request: CreateChatCompletionRequest, db: MongoClient = Depends(get_mongo_client)
 ):
@@ -71,11 +75,6 @@ async def index(
     return response
 
 
-@app.get("/v1/hello/{name}")
-async def get_name(name: str):
-    return {"name": name}
-
-
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
@@ -86,8 +85,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "status": exc.status_code,
             "detail": exc.detail,
         },
-        headers=exc.headers
+        headers=exc.headers,
     )
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -99,5 +99,5 @@ async def global_exception_handler(request: Request, exc: Exception):
             "status": HTTP_500_INTERNAL_SERVER_ERROR,
             "detail": "Please retry the request. If the error persists, check server logs for more detailed information or contact support: prateek@llmhub.dev",
         },
-        headers={"Content-Type": "application/problem+json"}
+        headers={"Content-Type": "application/problem+json"},
     )

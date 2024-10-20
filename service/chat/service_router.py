@@ -1,4 +1,5 @@
-from service.chat.azure_openai import Azure_Chat_Completions
+from service.chat.azure_openai import Azure_OpenAI_Chat_Completions
+from service.chat.gemini import Gemini_Chat_Completions
 from pydantic_types.chat import (
     ChatCompletion,
     ChatCompletionChoice,
@@ -8,7 +9,9 @@ from pydantic_types.chat import (
 
 def RouterChatCompletion(model: str, request):
     if model == "gpt-4o-mini":
-        return Azure_Chat_Completions(request)
+        return Azure_OpenAI_Chat_Completions(request)
+    elif model == "gemini-1.5-flash":
+        return Gemini_Chat_Completions(request)
     else:
         return ChatCompletion(
             id="llmhub.dev",
