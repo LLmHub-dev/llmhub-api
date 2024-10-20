@@ -1,18 +1,15 @@
 import os
 
 
-from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi import FastAPI, Depends, HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
 
 
-from starlette.status import HTTP_403_FORBIDDEN
+from starlette.status import HTTP_403_FORBIDDEN, HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR
 
 
 from llmhub.router import route
-
-
-from motor.motor_asyncio import AsyncIOMotorClient
 
 
 from service.chat.service_router import RouterChatCompletion
@@ -49,17 +46,24 @@ def verify_api_key(
     if authorized != True:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
-            detail="Invalid API Key",
+            detail="Invalid API Key provided. Ensure that the correct key is being sent in the request header.",
+            headers={"Content-Type": "application/problem+json"},
         )
 
 
 app = FastAPI(dependencies=[Depends(verify_api_key)])
 
 
-@app.api_route("/v1/chat/completions", methods=["GET", "POST"])
+@app.api_route("/v1/chat/completions", methods=["POST","GET"])
 async def index(
     request: CreateChatCompletionRequest, db: MongoClient = Depends(get_mongo_client)
 ):
+    if request.messages[-1].role != "user":
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail="Ensure the final message in the messages array has the role 'user'.",
+            headers={"Content-Type": "application/problem+json"},
+        )
     content = request.messages[-1].content
     model = route(content, db)
     model = model.strip()
@@ -72,9 +76,28 @@ async def get_name(name: str):
     return {"name": name}
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
-        status_code=500,
-        content={"message": "An unexpected error occurred."},
+        status_code=exc.status_code,
+        content={
+            "type": "about:blank",
+            "title": "HTTP Error",
+            "status": exc.status_code,
+            "detail": exc.detail,
+        },
+        headers=exc.headers
+    )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "type": "about:blank",
+            "title": "Internal Server Error",
+            "status": HTTP_500_INTERNAL_SERVER_ERROR,
+            "detail": "Please retry the request. If the error persists, check server logs for more detailed information or contact support: prateek@llmhub.dev",
+        },
+        headers={"Content-Type": "application/problem+json"}
     )
