@@ -138,3 +138,6 @@ __azurite_db*__.json
 
 api_key.txt
 mongo_uri.txt
+
+#Local development
+test_local.py
