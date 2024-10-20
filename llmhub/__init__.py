@@ -7,15 +7,9 @@ from llmhub.router import route
 from fastapi.responses import JSONResponse
 from utils.database import get_mongo_client
 from utils.auth import verify_token
-
+from pydantic_types.chat import CreateChatCompletionRequest, ChatCompletion, ChatCompletionChoice, Usage
 API_KEY = os.getenv("API_KEY")
 MONGO_URI = os.getenv("MONGO_URI")
-
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
 security = HTTPBearer()
 
 
@@ -38,10 +32,31 @@ async def get_db_client():
 
 
 @app.get("/v1/chat/completions")
-async def index(message: str, db_client=Depends(get_db_client)):
-    model = route(message, db_client)
+async def index(request: CreateChatCompletionRequest, db_client=Depends(get_db_client)):
+    content=request.messages[-1].content
+
+    model = route(content, db_client)
     model = model.strip()
-    return {"model": model}
+
+    return ChatCompletion(
+        id="llmhub.dev",
+        object="chat.completion",
+        created=1697723200,
+        model=model,
+        choices=[
+            ChatCompletionChoice(
+                index=0,
+                message={"role": "assistant", "content": model },
+                finish_reason="stop"
+            )
+        ],
+        usage=Usage(
+            prompt_tokens=5,
+            completion_tokens=10,
+            total_tokens=15
+        ),
+        system_fingerprint="1234567"
+    )
 
 
 @app.get("/v1/hello/{name}")
