@@ -10,24 +10,21 @@ from utils.database import (
     write_sys_prompt_config,
 )
 from utils.prompt_format import create_route_tag
-
+from dotenv import load_dotenv
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 
-def load_api_key(api_key_path="api_key.txt"):
+def load_api_key():
     """
     Load the API key from a file or environment variable.
     """
 
     try:
-        if os.getenv("GENAI_API_KEY"):
-            return os.getenv("GENAI_API_KEY")
-
-        with open(api_key_path, "r") as file:
-            return file.readline().strip()
+        if os.getenv("GEMINI_API_KEY"):
+            return os.getenv("GEMINI_API_KEY")
 
     except Exception as e:
         logging.error(f"Error loading API key: {e}")

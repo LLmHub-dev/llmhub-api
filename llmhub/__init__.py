@@ -11,8 +11,18 @@ from starlette.status import HTTP_403_FORBIDDEN
 
 from llmhub.router import route
 
+
+from motor.motor_asyncio import AsyncIOMotorClient
+
+
+from service.chat.service_router import RouterChatCompletion
+
+
 from utils.database import get_mongo_client
 from utils.auth import verify_token
+
+
+from pymongo import MongoClient
 
 
 from pydantic_types.chat import (
@@ -23,8 +33,10 @@ from pydantic_types.chat import (
 )
 
 
-API_KEY = os.getenv("API_KEY")
-MONGO_URI = os.getenv("MONGO_URI")
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 security = HTTPBearer()
@@ -44,33 +56,15 @@ def verify_api_key(
 app = FastAPI(dependencies=[Depends(verify_api_key)])
 
 
-async def get_db_client():
-    return get_mongo_client(MONGO_URI)
-
-
 @app.api_route("/v1/chat/completions", methods=["GET", "POST"])
-async def index(request: CreateChatCompletionRequest, db_client=Depends(get_db_client)):
+async def index(
+    request: CreateChatCompletionRequest, db: MongoClient = Depends(get_mongo_client)
+):
     content = request.messages[-1].content
-
-    model = route(content, db_client)
+    model = route(content, db)
     model = model.strip()
-
-    return ChatCompletion(
-        id="llmhub.dev",
-        object="chat.completion",
-        created=1697723200,
-        model=model,
-        choices=[
-            ChatCompletionChoice(
-                index=0,
-                message={"role": "assistant", "content": model},
-                finish_reason="stop",
-            )
-        ],
-        usage=Usage(prompt_tokens=5, completion_tokens=10, total_tokens=15),
-        system_fingerprint="1234567",
-    )
-
+    response=RouterChatCompletion(model=model,request=request)
+    return response
 
 @app.get("/v1/hello/{name}")
 async def get_name(name: str):

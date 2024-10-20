@@ -3,8 +3,8 @@ import os
 
 # Load environment variables
 
-SECRET_KEY = "af04c343a52c6eaf13e3b7701090db2aeb3eb2e0dce55cc6d53442e8f0645c92"
-ALGORITHM = "HS256"
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 
 def create_access_token(data: dict):

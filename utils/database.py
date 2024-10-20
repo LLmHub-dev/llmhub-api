@@ -4,24 +4,17 @@ from pymongo.server_api import ServerApi
 import urllib.parse
 
 
-def get_mongo_client(uri):
-    uri = load_mongo_uri()
-    mongo_client = initialize_mongo_client(uri)
+def get_mongo_client() -> MongoClient:
+    uri = load_mongo_uri()  # Assuming this function loads the MongoDB URI
+    mongo_client = initialize_mongo_client(uri)  # Assuming this initializes a MongoClient
     return mongo_client
 
 
-def load_mongo_uri(file_path="mongo_uri.txt"):
-    """Load MongoDB URI from a file."""
+def load_mongo_uri():
     try:
         if os.getenv("MONGO_URI"):
             return os.getenv("MONGO_URI")
-        with open(file_path, "r") as file:
-            uri = file.readline().strip()
-        return uri
-    except FileNotFoundError:
-        raise Exception(
-            f"File {file_path} not found. Please ensure the file path is correct."
-        )
+
     except Exception as e:
         raise Exception(f"An error occurred while reading the file: {e}")
 
@@ -69,7 +62,8 @@ def get_sys_prompt_config(
         else:
             raise Exception(f"No route configuration found for mode: {mode}")
     except Exception as e:
-        raise Exception(f"Error retrieving route configuration: {e}")
+        print(e)
+        raise Exception(f"Error retrieving route configuration: {e}",e)
 
 
 def write_sys_prompt_config(
