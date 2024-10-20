@@ -1,6 +1,7 @@
 import logging
 from utils.database import get_mode_config, write_sys_prompt_config
 
+
 def create_dynamic_prompt(dict_keys, dict_values):
 
     if len(dict_keys) != len(dict_values):
