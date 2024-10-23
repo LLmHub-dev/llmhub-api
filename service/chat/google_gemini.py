@@ -9,16 +9,26 @@ from pydantic_types.chat import (
 
 
 def Google_Gemini_Chat_Completions(request):
+    """Generate chat completions using the Google Gemini model.
+
+    Args:
+        request: An object containing the parameters required for the chat completion.
+
+    Returns:
+        response: The response from the Gemini chat completion API.
+    """
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     model = genai.GenerativeModel("gemini-1.5-flash")
+    
+    
     chat_history = [
         {"role": "model" if msg.role == "assistant" else "user", "parts": msg.content}
         for msg in request.messages
     ]
-
     chat = model.start_chat(
         history=chat_history,
     )
+
     response = chat.send_message(request.messages[-1].content)
     current_unix_timestamp = int(time.time())
     return ChatCompletion(

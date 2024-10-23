@@ -7,14 +7,21 @@ AZURE_META_ENDPOINT = os.getenv("AZURE_META_ENDPOINT")
 
 
 def Azure_Meta_Chat_Completions(request):
+    """Generate chat completions using the Azure Meta model.
 
+    Args:
+        request: An object containing the parameters required for the chat completion.
+
+    Returns:
+        response: The response from the Azure OpenAI chat completion API.
+    """
     client = OpenAI(
         base_url=AZURE_META_ENDPOINT,
         api_key=AZURE_META_API_KEY,
     )
 
     response = client.chat.completions.create(
-        model="Meta-Llama-3.1-8B-Instruc",
+        model="Meta-Llama-3.1-8B",
         messages=request.messages,
         temperature=request.temperature,
         top_p=request.top_p,

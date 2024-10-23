@@ -7,7 +7,14 @@ AZURE_MISTRAL_ENDPOINT = os.getenv("AZURE_MISTRAL_ENDPOINT")
 
 
 def Azure_Mistral_Chat_Completions(request):
+    """Generate chat completions using the Azure Mistral model.
 
+    Args:
+        request: An object containing the parameters required for the chat completion.
+
+    Returns:
+        response: The response from the Azure OpenAI chat completion API.
+    """
     client = OpenAI(
         base_url=AZURE_MISTRAL_ENDPOINT,
         api_key=AZURE_MISTRAL_API_KEY,
