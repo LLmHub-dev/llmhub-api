@@ -38,11 +38,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-
-
 security = HTTPBearer()
-
-
 def verify_api_key(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
@@ -57,26 +53,54 @@ def verify_api_key(
 
 app = FastAPI(dependencies=[Depends(verify_api_key)])
 
+# Global variable to hold the MongoDB client
+mongo_client: MongoClient = None
+
+async def start_mongo_client():
+    global mongo_client
+    mongo_client = get_mongo_client()
+    return mongo_client
+
+@app.on_event("startup")
+async def startup_event():
+    global mongo_client
+    mongo_client = await start_mongo_client()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    global mongo_client
+    if mongo_client:
+        mongo_client.close()
+        mongo_client = None
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
-    request: CreateChatCompletionRequest, db: MongoClient = Depends(get_mongo_client)
+    request: CreateChatCompletionRequest,
 ):
+    validate_request(request)
+    model = route(request.messages[-1].content, mongo_client).strip()
+    response = RouterChatCompletion(model=model, request=request)
+    return response
+
+
+def validate_request(request: CreateChatCompletionRequest):
+    """
+    Validates the chat completion request.
+    Raises an HTTP 400 exception if validation fails.
+    """
     if request.messages[-1].role != "user":
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="Ensure the final message in the messages array has the role 'user'.",
             headers={"Content-Type": "application/problem+json"},
         )
-    content = request.messages[-1].content
-    model = route(content, db)
-    model = model.strip()
-    response = RouterChatCompletion(model=model, request=request)
-    return response
-
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles HTTP exceptions.
+    Returns a standardized JSON response for HTTP exceptions.
+    """
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -91,6 +115,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Handles general exceptions.
+    Returns a standardized JSON response for unhandled exceptions.
+    """
     return JSONResponse(
         status_code=HTTP_500_INTERNAL_SERVER_ERROR,
         content={

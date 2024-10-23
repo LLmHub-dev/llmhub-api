@@ -63,20 +63,20 @@ def get_routing_info(client: MongoClient, db_name: str = "Routers",
     :raises LookupError: If system prompt is not found for the given mode.
     """
 
-    if mode == "automatic":
-        return """ You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
-        - If the instruction is related to **coding**, output 'claude-3.5-sonnet'.
-        - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
-        - If the instruction contains **very long context texts**, output 'gemini-1.5-flash'.
-        - If the instruction is for **summarization**, output 'mistral-nemo'.
-        - For **general-purpose or friendly conversation**, output 'meta-llama'.
-        Your response must strictly be one of the following with no extra characters or information:
-        - 'claude-3.5-sonnet'
-        - 'gpt-4o-mini'
-        - 'gemini-1.5-flash'
-        - 'mistral-nemo'
-        - 'meta-llama'
-        Now, this is the instruction:"""
+    #if mode == "automatic":
+    #    return """ You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
+    #    - If the instruction is related to **coding**, output 'claude-3.5-sonnet'.
+    #    - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
+    #    - If the instruction contains **very long context texts**, output 'gemini-1.5-flash'.
+    #    - If the instruction is for **summarization**, output 'mistral-nemo'.
+    #    - For **general-purpose or friendly conversation**, output 'meta-llama'.
+    #    Your response must strictly be one of the following with no extra characters or information:
+    #    - 'claude-3.5-sonnet'
+    #    - 'gpt-4o-mini'
+    #    - 'gemini-1.5-flash'
+    #    - 'mistral-nemo'
+    #    - 'meta-llama'
+    #    Now, this is the instruction:"""
     try:
         collection: Collection = client[db_name][collection_name]
         result = collection.find_one({"mode": mode})
