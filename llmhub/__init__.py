@@ -39,6 +39,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 security = HTTPBearer()
+
+
 def verify_api_key(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
@@ -56,15 +58,18 @@ app = FastAPI(dependencies=[Depends(verify_api_key)])
 # Global variable to hold the MongoDB client
 mongo_client: MongoClient = None
 
+
 async def start_mongo_client():
     global mongo_client
     mongo_client = get_mongo_client()
     return mongo_client
 
+
 @app.on_event("startup")
 async def startup_event():
     global mongo_client
     mongo_client = await start_mongo_client()
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -72,6 +77,7 @@ async def shutdown_event():
     if mongo_client:
         mongo_client.close()
         mongo_client = None
+
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
@@ -94,6 +100,7 @@ def validate_request(request: CreateChatCompletionRequest):
             detail="Ensure the final message in the messages array has the role 'user'.",
             headers={"Content-Type": "application/problem+json"},
         )
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):

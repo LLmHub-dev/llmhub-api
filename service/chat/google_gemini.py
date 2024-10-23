@@ -19,8 +19,7 @@ def Google_Gemini_Chat_Completions(request):
     """
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
     model = genai.GenerativeModel("gemini-1.5-flash")
-    
-    
+
     chat_history = [
         {"role": "model" if msg.role == "assistant" else "user", "parts": msg.content}
         for msg in request.messages

@@ -14,11 +14,15 @@ def create_route_config_prmpt(dict_keys: List[str], dict_values: List[str]) -> s
     """
 
     if len(dict_keys) != len(dict_values):
-        logging.error("Mismatched lengths: dict_keys and dict_values must have the same length.")
+        logging.error(
+            "Mismatched lengths: dict_keys and dict_values must have the same length."
+        )
         raise ValueError("dict_keys and dict_values must have the same length.")
-    
+
     if not dict_keys or not dict_values:
-        logging.error("Empty keys or values: dict_keys and dict_values cannot be empty.")
+        logging.error(
+            "Empty keys or values: dict_keys and dict_values cannot be empty."
+        )
         raise ValueError("dict_keys and dict_values cannot be empty.")
 
     conditions = []
@@ -43,7 +47,7 @@ def create_route_config_prmpt(dict_keys: List[str], dict_values: List[str]) -> s
 def get_custom_model_n_intent(mongo_client) -> Tuple[List[str], List[str]]:
     """
     Fetch model names and intents from MongoDB route configuration.
-    
+
     :param mongo_client: MongoDB client instance.
     :return: Tuple containing lists of models and intents.
     :raises RuntimeError: If the route configuration cannot be fetched.
@@ -60,7 +64,7 @@ def get_custom_model_n_intent(mongo_client) -> Tuple[List[str], List[str]]:
 def generate_custom_route_config(models: List[str], intents: List[str]) -> str:
     """
     Generate a dynamic prompt using the provided models and intents.
-    
+
     :param models: List of model names.
     :param intents: List of corresponding intents.
     :return: Generated dynamic system prompt.
@@ -79,9 +83,9 @@ def generate_custom_route_config(models: List[str], intents: List[str]) -> str:
 
 def create_custom_route_config(mongo_client) -> str:
     """
-    Create a route tag by fetching models and intents, generating the system prompt, 
+    Create a route tag by fetching models and intents, generating the system prompt,
     and writing it to the MongoDB configuration.
-    
+
     :param mongo_client: MongoDB client instance.
     :return: Generated system prompt.
     :raises RuntimeError: If an error occurs during route tag creation.

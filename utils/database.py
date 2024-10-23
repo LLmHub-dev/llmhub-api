@@ -7,6 +7,7 @@ from typing import Optional, Dict
 
 logging.basicConfig(level=logging.INFO)
 
+
 def get_mongo_client() -> MongoClient:
     """
     Fetch MongoDB client from environment variable.
@@ -25,9 +26,13 @@ def get_mongo_client() -> MongoClient:
         logging.error(f"Failed to connect to MongoDB: {e}")
         raise ConnectionError(f"Failed to connect to MongoDB: {e}")
 
-def get_custom_config(client: MongoClient, db_name: str = "Routers", 
-                      collection_name: str = "route-config", 
-                      mode: str = "automatic") -> Dict:
+
+def get_custom_config(
+    client: MongoClient,
+    db_name: str = "Routers",
+    collection_name: str = "route-config",
+    mode: str = "automatic",
+) -> Dict:
     """
     Fetch the route configuration from MongoDB.
     :param client: MongoDB client instance.
@@ -50,9 +55,12 @@ def get_custom_config(client: MongoClient, db_name: str = "Routers",
         raise LookupError(f"Error retrieving route configuration: {e}")
 
 
-def get_routing_info(client: MongoClient, db_name: str = "Routers", 
-                     collection_name: str = "route-config", 
-                     mode: str = "automatic") -> Optional[str]:
+def get_routing_info(
+    client: MongoClient,
+    db_name: str = "Routers",
+    collection_name: str = "route-config",
+    mode: str = "automatic",
+) -> Optional[str]:
     """
     Fetch the routing system prompt from MongoDB.
     :param client: MongoDB client instance.
@@ -89,10 +97,13 @@ def get_routing_info(client: MongoClient, db_name: str = "Routers",
         raise LookupError(f"Error retrieving system prompt: {e}")
 
 
-def write_custom_route_config(client: MongoClient, system_prompt: str, 
-                              db_name: str = "Routers", 
-                              collection_name: str = "route-config", 
-                              mode: str = "automatic") -> None:
+def write_custom_route_config(
+    client: MongoClient,
+    system_prompt: str,
+    db_name: str = "Routers",
+    collection_name: str = "route-config",
+    mode: str = "automatic",
+) -> None:
     """
     Write the system prompt to MongoDB.
     :param client: MongoDB client instance.
