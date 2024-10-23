@@ -1,42 +1,44 @@
 import os
+import logging
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-import urllib.parse
+from pymongo.collection import Collection
+from typing import Optional, Dict
 
+logging.basicConfig(level=logging.INFO)
 
 def get_mongo_client() -> MongoClient:
-    uri = load_mongo_uri()  # Assuming this function loads the MongoDB URI
-    mongo_client = initialize_mongo_client(
-        uri
-    )  # Assuming this initializes a MongoClient
-    return mongo_client
+    """
+    Fetch MongoDB client from environment variable.
+    :return: MongoClient instance.
+    :raises ValueError: If MongoDB URI is not found in environment variables.
+    """
+    uri = os.getenv("MONGO_URI")
+    if not uri:
+        logging.error("MONGO_URI not found in environment variables.")
+        raise ValueError("MONGO_URI not set in environment variables.")
 
-
-def load_mongo_uri():
-    try:
-        if os.getenv("MONGO_URI"):
-            return os.getenv("MONGO_URI")
-
-    except Exception as e:
-        raise Exception(f"An error occurred while reading the file: {e}")
-
-
-def initialize_mongo_client(uri):
-    """Initialize and return MongoDB client."""
     try:
         client = MongoClient(uri, server_api=ServerApi("1"))
         return client
     except Exception as e:
-        raise Exception(f"Failed to connect to MongoDB: {e}")
+        logging.error(f"Failed to connect to MongoDB: {e}")
+        raise ConnectionError(f"Failed to connect to MongoDB: {e}")
 
-
-def get_mode_config(
-    client, db_name="Routers", collection_name="route-config", mode="automatic"
-):
-    """Fetch the route configuration from MongoDB."""
+def get_custom_config(client: MongoClient, db_name: str = "Routers", 
+                      collection_name: str = "route-config", 
+                      mode: str = "automatic") -> Dict:
+    """
+    Fetch the route configuration from MongoDB.
+    :param client: MongoDB client instance.
+    :param db_name: Database name.
+    :param collection_name: Collection name.
+    :param mode: Mode of routing configuration.
+    :return: Configuration dictionary.
+    :raises LookupError: If configuration is not found for the given mode.
+    """
     try:
-        database = client[db_name]
-        collection = database[collection_name]
+        collection: Collection = client[db_name][collection_name]
         result = collection.find_one({"mode": mode})
 
         if result:
@@ -44,46 +46,73 @@ def get_mode_config(
         else:
             raise Exception(f"No route configuration found for mode: {mode}")
     except Exception as e:
-        raise Exception(f"Error retrieving route configuration: {e}")
+        logging.error(f"Error retrieving route configuration: {e}")
+        raise LookupError(f"Error retrieving route configuration: {e}")
 
 
-def get_sys_prompt_config(
-    client, db_name="Routers", collection_name="route-config", mode="automatic"
-):
-    """Fetch the route configuration from MongoDB."""
+def get_routing_info(client: MongoClient, db_name: str = "Routers", 
+                     collection_name: str = "route-config", 
+                     mode: str = "automatic") -> Optional[str]:
+    """
+    Fetch the routing system prompt from MongoDB.
+    :param client: MongoDB client instance.
+    :param db_name: Database name.
+    :param collection_name: Collection name.
+    :param mode: Mode of routing configuration.
+    :return: Routing system prompt or default prompt for 'automatic' mode.
+    :raises LookupError: If system prompt is not found for the given mode.
+    """
 
-    if mode == "automatic":
-        return "You are a routing agent. Based on the provided instruction, if the instruction is related to coding, output 'claude-3.5-sonnet'. if the instruction is related to general, output 'mistral-nemo'. if the instruction is related to reasoning, output 'gpt-4o-mini'. Do not include any additional text or information in your response. Your output must strictly be one of the following with no extra characters: 'claude-3.5-sonnet', 'mistral-nemo', 'gpt-4o-mini'. Now this is the instruction:"
+    #if mode == "automatic":
+    #    return """ You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
+    #    - If the instruction is related to **coding**, output 'claude-3.5-sonnet'.
+    #    - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
+    #    - If the instruction contains **very long context texts**, output 'gemini-1.5-flash'.
+    #    - If the instruction is for **summarization**, output 'mistral-nemo'.
+    #    - For **general-purpose or friendly conversation**, output 'meta-llama'.
+    #    Your response must strictly be one of the following with no extra characters or information:
+    #    - 'claude-3.5-sonnet'
+    #    - 'gpt-4o-mini'
+    #    - 'gemini-1.5-flash'
+    #    - 'mistral-nemo'
+    #    - 'meta-llama'
+    #    Now, this is the instruction:"""
     try:
-        database = client[db_name]
-        collection = database[collection_name]
+        collection: Collection = client[db_name][collection_name]
         result = collection.find_one({"mode": mode})
-
         if result:
             return result.get("system_prompt")
         else:
             raise Exception(f"No route configuration found for mode: {mode}")
     except Exception as e:
-        print(e)
-        raise Exception(f"Error retrieving route configuration: {e}", e)
+        logging.error(f"Error retrieving system prompt: {e}")
+        raise LookupError(f"Error retrieving system prompt: {e}")
 
 
-def write_sys_prompt_config(
-    client,
-    system_prompt,
-    db_name="Routers",
-    collection_name="route-config",
-    mode="automatic",
-):
-    """Write the system prompt to MongoDB."""
+def write_custom_route_config(client: MongoClient, system_prompt: str, 
+                              db_name: str = "Routers", 
+                              collection_name: str = "route-config", 
+                              mode: str = "automatic") -> None:
+    """
+    Write the system prompt to MongoDB.
+    :param client: MongoDB client instance.
+    :param system_prompt: System prompt to store.
+    :param db_name: Database name.
+    :param collection_name: Collection name.
+    :param mode: Mode of routing configuration.
+    :raises ValueError: If system_prompt is None.
+    :raises RuntimeError: If the write operation to MongoDB fails.
+    """
     try:
-        database = client[db_name]
-        collection = database[collection_name]
+        if system_prompt is None:
+            logging.error("Route Info cannot be None.")
+            raise ValueError("Route Info cannot be None.")
+        collection: Collection = client[db_name][collection_name]
         query_filter = {"mode": mode}
         update_operation = {"$set": {"system_prompt": system_prompt}}
         result = collection.update_one(query_filter, update_operation)
-
         return
 
     except Exception as e:
-        raise Exception(f"Error writing system prompt to database: {e}")
+        logging.error(f"Error writing Route Info to database: {e}")
+        raise RuntimeError(f"Error writing Route Info to database: {e}")

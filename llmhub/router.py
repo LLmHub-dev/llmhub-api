@@ -3,13 +3,11 @@ import json
 import logging
 from google.generativeai import GenerativeModel, configure as genai_configure
 from utils.database import (
-    load_mongo_uri,
-    initialize_mongo_client,
-    get_mode_config,
-    get_sys_prompt_config,
-    write_sys_prompt_config,
+    get_custom_config,
+    get_routing_info,
+    write_custom_route_config,
 )
-from utils.prompt_format import create_route_tag
+from utils.prompt_format import create_custom_route_config
 from dotenv import load_dotenv
 
 logging.basicConfig(
@@ -66,9 +64,9 @@ def route(msg, mongo_client, model="automatic"):
     Main function to initialize MongoDB, fetch route config, generate prompt, and call the GenAI model.
     """
     # Load MongoDB URI and initialize client
-    route_info = get_sys_prompt_config(mongo_client)
+    route_info = get_routing_info(mongo_client)
     if not route_info:
-        route_info = create_route_tag(mongo_client)
+        route_info = create_custom_route_config(mongo_client)
     api_key = load_api_key()
     configure_genai(api_key)
     response_text = call_genai_model(route_info + " " + msg)
