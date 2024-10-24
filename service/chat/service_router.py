@@ -16,7 +16,6 @@ def RouterChatCompletion(model: str, request: dict) -> ChatCompletion:
     Args:
         model (str): The model to use for chat completion.
         request (dict): The request data for the model's completion service.
-        parameter1, parameter2: Optional additional parameters for model-specific customization.
 
     Returns:
         ChatCompletion: The response from the chosen model's service.
