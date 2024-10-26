@@ -44,6 +44,15 @@ load_dotenv()
 app = FastAPI()
 
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:7071/","https://llmhub-dv-api.azurewebsites.net/"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 mongo_client: MongoClient = None
 
 
@@ -113,3 +122,12 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
         headers={"Content-Type": "application/problem+json"},
     )
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'self'"
+    return response
