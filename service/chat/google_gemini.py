@@ -9,6 +9,7 @@ from pydantic_types.chat import (
 
 GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
+
 def Google_Gemini_Chat_Completions(request):
     """Generate chat completions using the Google Gemini model.
 
