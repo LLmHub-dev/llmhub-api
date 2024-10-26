@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI, Depends, HTTPException, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 
 from starlette.status import (
@@ -87,10 +88,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
-            "type": "about:blank",
+            "type": "Error",
             "title": "HTTP Error",
             "status": exc.status_code,
-            "detail": exc.detail,
+            "detail": "An error occurred. Please check your request and try again.",
         },
         headers=exc.headers,
     )
@@ -105,8 +106,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=HTTP_500_INTERNAL_SERVER_ERROR,
         content={
-            "type": "about",
-            "title": "Request Formart Error",
+            "type": "Error",
+            "title": "Internal Server Error",
             "status": HTTP_500_INTERNAL_SERVER_ERROR,
             "detail": "Please retry the request. If the error persists, check server logs for more detailed information or contact support: prateek@llmhub.dev",
         },
