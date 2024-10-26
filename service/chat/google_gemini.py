@@ -7,6 +7,7 @@ from pydantic_types.chat import (
     Usage,
 )
 
+GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
 
 def Google_Gemini_Chat_Completions(request):
     """Generate chat completions using the Google Gemini model.
@@ -17,7 +18,7 @@ def Google_Gemini_Chat_Completions(request):
     Returns:
         response: The response from the Gemini chat completion API.
     """
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+    genai.configure(api_key=GEMINI_API_KEY)
     model = genai.GenerativeModel("gemini-1.5-flash")
 
     chat_history = [
