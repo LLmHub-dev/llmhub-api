@@ -20,12 +20,12 @@ from llmhub.router import route
 from service.chat.service_router import RouterChatCompletion
 
 
-from utils.database import get_mongo_client
+from utils.database import get_mongo_client, insert_api_call_log
 from utils.auth import verify_token, validate_request, verify_api_key
 
 
 from pymongo import MongoClient
-
+from prisma import Prisma
 
 from pydantic_types.chat import (
     CreateChatCompletionRequest,
@@ -54,26 +54,34 @@ app.add_middleware(
 
 
 mongo_client: MongoClient = None
-
+db: Prisma = None
 
 async def start_mongo_client():
     global mongo_client
     mongo_client = get_mongo_client()
     return mongo_client
 
+# Initialize Prisma client asynchronously
+async def start_prisma_client():
+    global db
+    db = Prisma()
+    await db.connect()
+    return db
 
 @app.on_event("startup")
 async def startup_event():
-    global mongo_client
-    mongo_client = await start_mongo_client()
+    global mongo_client, db
+    mongo_client = start_mongo_client()  # MongoDB client
+    db = await start_prisma_client()     # Prisma client
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    global mongo_client
+    global mongo_client, db
     if mongo_client:
         mongo_client.close()
-        mongo_client = None
+    if db:
+        await db.disconnect()
 
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
@@ -85,6 +93,7 @@ async def index(
     if validation and authorization:
         model = route(request.messages[-1].content, mongo_client).strip()
         response = RouterChatCompletion(model=model, request=request)
+        log = await insert_api_call_log(response,authorization[0],authorization[1],db)
         return response
 
 
