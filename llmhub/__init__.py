@@ -80,7 +80,7 @@ async def shutdown_event():
 async def index(
     request: CreateChatCompletionRequest,
     validation: bool = Depends(validate_request),
-    authorization: bool = Depends(verify_api_key),
+    authorization: list = Depends(verify_api_key),
 ):
     if validation and authorization:
         model = route(request.messages[-1].content, mongo_client).strip()

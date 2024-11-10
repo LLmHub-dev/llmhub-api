@@ -49,11 +49,13 @@ def verify_token(token: str):
     """
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("user")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM],options={"verify_signature": True})
+        print(payload)
+        username: str = payload.get("userId")
+        name: str = payload.get("name")
         if username is None:
             return False
-        return True
+        return True,[username, name]
     except jwt.PyJWTError:
         return False
 
@@ -61,14 +63,14 @@ def verify_token(token: str):
 def verify_api_key(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
-    authorized = verify_token(credentials.credentials)
+    authorized, userID = verify_token(credentials.credentials)
     if authorized != True:
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Invalid API Key provided. Ensure that the correct key is being sent in the request header.",
             headers={"Content-Type": "application/problem+json"},
         )
-    return authorized
+    return userID
 
 
 def validate_request(request: CreateChatCompletionRequest):
