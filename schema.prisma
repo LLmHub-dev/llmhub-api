@@ -55,6 +55,7 @@ model User {
   stripeSubscriptionId   String?      @unique @map("stripe_subscription_id")
   stripePriceId          String?      @map("stripe_price_id")
   stripeCurrentPeriodEnd DateTime?    @map("stripe_current_period_end")
+  creditBalance          Decimal      @default(0.0) @db.Decimal(10, 6)
   accounts               Account[]
   apiCallLogs            ApiCallLog[]
   apiKeys                ApiKey[]
