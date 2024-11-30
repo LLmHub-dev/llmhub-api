@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from google.generativeai import GenerativeModel, configure as genai_configure
+import google.generativeai as genai
 from utils.database import (
     get_custom_config,
     get_routing_info,
@@ -17,7 +17,7 @@ logging.basicConfig(
 
 def configure_genai():
     try:
-        genai_configure(api_key=os.getenv("GEMINI_API_KEY"))
+        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
         logging.info("API configured successfully.")
 
     except Exception as e:
@@ -32,7 +32,7 @@ def infer_model_gemini(user_input):
 
     try:
         configure_genai()
-        model = GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-1.5-flash-8b")
         response = model.generate_content(user_input)
         logging.info("Model response received successfully.")
         return response.text
