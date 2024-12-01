@@ -49,20 +49,21 @@ def verify_token(token: str):
     """
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("user")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": True})
+        username: str = payload.get("userId")
+        name: str = token
         if username is None:
-            return False
-        return True
+            return None
+        return [username, name]
     except jwt.PyJWTError:
-        return False
+        return None
 
 
 def verify_api_key(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ):
     authorized = verify_token(credentials.credentials)
-    if authorized != True:
+    if authorized is None:  # Corrected the comparison here
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Invalid API Key provided. Ensure that the correct key is being sent in the request header.",

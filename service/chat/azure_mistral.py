@@ -20,19 +20,23 @@ def Azure_Mistral_Chat_Completions(request):
         api_key=AZURE_MISTRAL_API_KEY,
     )
 
-    response = client.chat.completions.create(
-        model="mistral-nemo",
-        messages=request.messages,
-        temperature=request.temperature,
-        top_p=request.top_p,
-        n=request.n,
-        stream=False,
-        logprobs=request.logprobs,
-        max_tokens=request.max_completion_tokens,
-        stop=request.stop,
-        user=request.user,
-        tools=request.tools,
-        tool_choice=request.tool_choice,
-    )
+    params = {
+            "model": "mistral-nemo",
+            "messages": request.messages,
+            "temperature": request.temperature,
+            "max_tokens": request.max_completion_tokens,
+            "stop": request.stop,
+            "user": request.user,
+            "tools": request.tools,
+            "tool_choice": request.tool_choice,
+            "stream": False,  # Set to False by default
+        }
+
+        # Remove keys with None values (optional parameters)
+    params = {k: v for k, v in params.items() if v is not None}
+
+        # API call to generate the response
+    response = client.chat.completions.create(**params)
+
 
     return response
