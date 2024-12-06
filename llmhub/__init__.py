@@ -1,15 +1,11 @@
-import os
-
-
 from fastapi import FastAPI, Depends, HTTPException, Security, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+
+
+from contextlib import asynccontextmanager
 
 
 from starlette.status import (
-    HTTP_403_FORBIDDEN,
-    HTTP_400_BAD_REQUEST,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -29,9 +25,6 @@ from pymongo import MongoClient
 
 from pydantic_types.chat import (
     CreateChatCompletionRequest,
-    ChatCompletion,
-    ChatCompletionChoice,
-    Usage,
 )
 
 
@@ -41,40 +34,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-app = FastAPI()
-
-
-#app.add_middleware(
-#    CORSMiddleware,
-#    allow_origins=["http://localhost:7071/","https://llmhub-dv-api.azurewebsites.net/"],  
-#    allow_credentials=True,
-#    allow_methods=["*"],
-#    allow_headers=["*"],
-#)
-
-
 mongo_client: MongoClient = None
 
 
-async def start_mongo_client():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     global mongo_client
+    # Startup logic
     mongo_client = get_mongo_client()
-    return mongo_client
-
-
-@app.on_event("startup")
-async def startup_event():
-    global mongo_client
-    mongo_client = await start_mongo_client()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    global mongo_client
+    yield  # Control passes to the application here
+    # Shutdown logic
     if mongo_client:
         mongo_client.close()
         mongo_client = None
 
+app = FastAPI(lifespan=lifespan)
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
