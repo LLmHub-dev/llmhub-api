@@ -1,3 +1,6 @@
+import os
+
+
 from fastapi import FastAPI, Depends, HTTPException, Security, Request
 from fastapi.responses import JSONResponse
 
@@ -16,6 +19,9 @@ from llmhub.router import route
 from service.chat.service_router import RouterChatCompletion
 
 
+import asyncpg
+
+
 from utils.database import get_mongo_client
 from utils.auth import verify_token, validate_request, verify_api_key
 
@@ -31,6 +37,9 @@ from pydantic_types.chat import (
 from dotenv import load_dotenv
 
 
+from utils.postgres import insert_api_call_log
+
+
 load_dotenv()
 
 
@@ -40,13 +49,22 @@ mongo_client: MongoClient = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global mongo_client
+    global pool
     # Startup logic
     mongo_client = get_mongo_client()
-    yield  # Control passes to the application here
+
+    # Initialize SQLAlchemy engine and session maker
+    DATABASE_URL = os.getenv("DATABASE_URL")  # Ensure DATABASE_URL is in your .env
+    pool = await asyncpg.create_pool(DATABASE_URL)
+    
+    yield  
     # Shutdown logic
     if mongo_client:
         mongo_client.close()
         mongo_client = None
+
+    if pool:
+        pool.close()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -59,6 +77,12 @@ async def index(
     if validation and authorization:
         model = route(request.messages[-1].content, mongo_client).strip()
         response = RouterChatCompletion(model=model, request=request)
+        await insert_api_call_log(
+            response_data=response,
+            user_id=authorization[0],
+            api_key_id=authorization[1],
+            db_pg=pool,
+        )
         return response
 
 
