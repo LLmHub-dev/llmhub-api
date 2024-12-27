@@ -1,9 +1,9 @@
 import os
 from openai import OpenAI
-import json
 
 AZURE_META_API_KEY = os.getenv("AZURE_META_API_KEY")
 AZURE_META_ENDPOINT = os.getenv("AZURE_META_ENDPOINT")
+AZURE_META_MODEL = os.getenv("AZURE_META_MODEL")
 
 
 def Azure_Meta_Chat_Completions(request):
@@ -30,7 +30,7 @@ def Azure_Meta_Chat_Completions(request):
 
         # Prepare the parameters
     params = {
-            "model": "Meta-Llama-3.1-8B",
+            "model": AZURE_META_MODEL,
             "messages": request.messages,
             "temperature": request.temperature,
             "frequency_penalty": request.frequency_penalty,

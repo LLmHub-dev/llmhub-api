@@ -1,23 +1,17 @@
 import jwt
 import os
-from typing import Optional, Dict, Any
-
-
-from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
 
 
 from pydantic_types.chat import CreateChatCompletionRequest
 
 
-from fastapi import FastAPI, Depends, HTTPException, Security, Request
+from fastapi import HTTPException, Security
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
 
 
 from starlette.status import (
     HTTP_403_FORBIDDEN,
     HTTP_400_BAD_REQUEST,
-    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 

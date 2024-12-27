@@ -1,7 +1,7 @@
 import os
 
 
-from fastapi import FastAPI, Depends, HTTPException, Security, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 
@@ -22,11 +22,7 @@ from service.chat.service_router import RouterChatCompletion
 import asyncpg
 
 
-from utils.database import get_mongo_client
-from utils.auth import verify_token, validate_request, verify_api_key
-
-
-from pymongo import MongoClient
+from utils.auth import validate_request, verify_api_key
 
 
 from pydantic_types.chat import (
@@ -43,25 +39,13 @@ from utils.postgres import insert_api_call_log
 load_dotenv()
 
 
-mongo_client: MongoClient = None
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global mongo_client
     global pool
-    # Startup logic
-    mongo_client = get_mongo_client()
-
-    # Initialize SQLAlchemy engine and session maker
-    DATABASE_URL = os.getenv("DATABASE_URL")  # Ensure DATABASE_URL is in your .env
+    DATABASE_URL = os.getenv("DATABASE_URL")
     pool = await asyncpg.create_pool(DATABASE_URL)
-    
-    yield  
-    # Shutdown logic
-    if mongo_client:
-        mongo_client.close()
-        mongo_client = None
+
+    yield
 
     if pool:
         pool.close()
@@ -75,7 +59,7 @@ async def index(
     authorization: list = Depends(verify_api_key),
 ):
     if validation and authorization:
-        model = route(request.messages[-1].content, mongo_client).strip()
+        model = route(request.messages[-1].content,model="automatic").strip()
         response = RouterChatCompletion(model=model, request=request)
         await insert_api_call_log(
             response_data=response,
@@ -120,12 +104,3 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
         headers={"Content-Type": "application/problem+json"},
     )
-
-
-#@app.middleware("http")
-#async def add_security_headers(request: Request, call_next):
-#    response = await call_next(request)
-#    response.headers["X-Content-Type-Options"] = "nosniff"
-#    response.headers["X-Frame-Options"] = "DENY"
-#    response.headers["Content-Security-Policy"] = "default-src 'self'"
-#    return response

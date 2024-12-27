@@ -42,9 +42,7 @@ def infer_model_gemini(user_input):
         raise
 
 
-def route(msg, mongo_client, model="automatic"):
-    route_info = get_routing_info(mongo_client)
-    if not route_info:
-        route_info = create_custom_route_config(mongo_client)
+def route(msg, model="automatic"):
+    route_info = get_routing_info(model="automatic")
     response_text = infer_model_gemini(route_info + " " + msg)
     return response_text

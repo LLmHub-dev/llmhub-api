@@ -4,6 +4,7 @@ import json
 
 AZURE_MISTRAL_API_KEY = os.getenv("AZURE_MISTRAL_API_KEY")
 AZURE_MISTRAL_ENDPOINT = os.getenv("AZURE_MISTRAL_ENDPOINT")
+AZURE_MISTRAL_MODEL = os.getenv("AZURE_MISTRAL_MODEL")
 
 
 def Azure_Mistral_Chat_Completions(request):
@@ -21,7 +22,7 @@ def Azure_Mistral_Chat_Completions(request):
     )
 
     params = {
-            "model": "mistral-nemo",
+            "model": AZURE_MISTRAL_MODEL,
             "messages": request.messages,
             "temperature": request.temperature,
             "max_tokens": request.max_completion_tokens,
