@@ -48,9 +48,11 @@ async def lifespan(app: FastAPI):
     yield
 
     if pool:
-        pool.close()
+        await pool.close()
+
 
 app = FastAPI(lifespan=lifespan)
+
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
@@ -59,15 +61,21 @@ async def index(
     authorization: list = Depends(verify_api_key),
 ):
     if validation and authorization:
-        model = route(request.messages[-1].content,model="automatic").strip()
-        response = RouterChatCompletion(model=model, request=request)
-        await insert_api_call_log(
-            response_data=response,
-            user_id=authorization[0],
-            api_key_id=authorization[1],
-            db_pg=pool,
-        )
-        return response
+        try:
+            model = route(request.messages[-1].content, model="automatic").strip()
+            response = RouterChatCompletion(model=model, request=request)
+            await insert_api_call_log(
+                response_data=response,
+                user_id=authorization[0],
+                api_key_id=authorization[1],
+                db_pg=pool,
+            )
+
+            return response
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
 
 
 @app.exception_handler(HTTPException)
@@ -80,27 +88,39 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={
             "type": "Error",
-            "title": "HTTP Error",
+            "title": "Request Failed",
             "status": exc.status_code,
-            "detail": "An error occurred. Please check your request and try again.",
+            "detail": (
+                exc.detail
+                if exc.detail
+                else "An unexpected error occurred. Please verify your request and try again."
+            ),
+            "instance": str(request.url),
+            "method": request.method,
+            "suggestion": "Ensure your request parameters are correct. If the issue persists, contact support: support@llmhub.dev",
         },
         headers=exc.headers,
     )
 
 
-@app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """
     Handles general exceptions.
     Returns a standardized JSON response for unhandled exceptions.
     """
+    error_id = request.headers.get("X-Request-ID", "N/A")  # If request tracking is used
+
     return JSONResponse(
         status_code=HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "type": "Error",
             "title": "Internal Server Error",
             "status": HTTP_500_INTERNAL_SERVER_ERROR,
-            "detail": "Please retry the request. If the error persists, check server logs for more detailed information or contact support: prateek@llmhub.dev",
+            "detail": "An unexpected error occurred on the server. Please try again later.",
+            "instance": str(request.url),
+            "method": request.method,
+            "error_id": error_id,
+            "support": "If the error persists, contact support: support@llmhub.dev",
         },
         headers={"Content-Type": "application/problem+json"},
     )

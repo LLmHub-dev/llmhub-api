@@ -43,7 +43,12 @@ def verify_token(token: str):
     """
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": True})
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_signature": True},
+        )
         username: str = payload.get("userId")
         name: str = token
         if username is None:

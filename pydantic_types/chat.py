@@ -126,13 +126,6 @@ class CreateChatCompletionRequest(BaseModel):
         description="How to use the provided tools. If `auto`, the model will choose which tools to use. If `manual`, the model will only use tools specified by the `tool_code` field in the `message` object.",
     )
 
-    @validator("messages")
-    def messages_must_contain_at_least_one_user_message(cls, v):
-        user_messages = [msg for msg in v if msg.role == "user"]
-        if not user_messages:
-            raise ValueError("Messages must contain at least one user message")
-        return v
-
 
 class CreateChatCompletionResponse(BaseModel):
     id: str = Field(..., description="The ID of the chat completion.")

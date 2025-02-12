@@ -24,28 +24,28 @@ def Azure_Meta_Chat_Completions(request):
         response: The response from the Azure OpenAI chat completion API or error message.
     """
     client = OpenAI(
-            base_url=AZURE_META_ENDPOINT,
-            api_key=AZURE_META_API_KEY,
-        )
+        base_url=AZURE_META_ENDPOINT,
+        api_key=AZURE_META_API_KEY,
+    )
 
-        # Prepare the parameters
+    # Prepare the parameters
     params = {
-            "model": AZURE_META_MODEL,
-            "messages": request.messages,
-            "temperature": request.temperature,
-            "frequency_penalty": request.frequency_penalty,
-            "max_tokens": request.max_completion_tokens,
-            "stop": request.stop,
-            "user": request.user,
-            "tools": request.tools,
-            "tool_choice": request.tool_choice,
-            "stream": False,  # Set to False by default
-        }
+        "model": AZURE_META_MODEL,
+        "messages": request.messages,
+        "temperature": request.temperature,
+        "frequency_penalty": request.frequency_penalty,
+        "max_tokens": request.max_completion_tokens,
+        "stop": request.stop,
+        "user": request.user,
+        "tools": request.tools,
+        "tool_choice": request.tool_choice,
+        "stream": False,  # Set to False by default
+    }
 
-        # Remove keys with None values (optional parameters)
+    # Remove keys with None values (optional parameters)
     params = {k: v for k, v in params.items() if v is not None}
 
-        # API call to generate the response
+    # API call to generate the response
     response = client.chat.completions.create(**params)
 
     return response

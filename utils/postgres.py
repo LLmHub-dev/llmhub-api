@@ -10,7 +10,7 @@ async def insert_api_call_log(
     response_data: ChatCompletion,
     user_id: str,
     api_key_id: str,
-    db_pg: asyncpg.Connection  # Use asyncpg connection instead of AsyncSession
+    db_pg: asyncpg.Connection,  # Use asyncpg connection instead of AsyncSession
 ):
     """
     Inserts an API call log into the database.
@@ -32,7 +32,9 @@ async def insert_api_call_log(
         "prompt_tokens": response_data.usage.prompt_tokens,
         "completion_tokens": response_data.usage.completion_tokens,
         "total_tokens": response_data.usage.total_tokens,
-        "credits_used": Decimal(response_data.usage.total_tokens),  # Ensure proper decimal conversion
+        "credits_used": Decimal(
+            response_data.usage.total_tokens
+        ),  # Ensure proper decimal conversion
         "timestamp": datetime.utcnow(),  # Default timestamp
     }
 
@@ -49,16 +51,18 @@ async def insert_api_call_log(
         """
 
         # Execute the query and fetch the result
-        result = await db_pg.fetchrow(insert_query, 
-                                      log_data["id"],
-                                      log_data["userId"], 
-                                      log_data["apiKeyId"], 
-                                      log_data["model_name"],
-                                      log_data["prompt_tokens"],
-                                      log_data["completion_tokens"],
-                                      log_data["total_tokens"],
-                                      log_data["credits_used"],
-                                      log_data["timestamp"])
+        result = await db_pg.fetchrow(
+            insert_query,
+            log_data["id"],
+            log_data["userId"],
+            log_data["apiKeyId"],
+            log_data["model_name"],
+            log_data["prompt_tokens"],
+            log_data["completion_tokens"],
+            log_data["total_tokens"],
+            log_data["credits_used"],
+            log_data["timestamp"],
+        )
 
         if result:
             logging.info(f"Inserted log with ID: {result['userId']}")
