@@ -1,15 +1,14 @@
 import os
 
 
-from fastapi import FastAPI, Depends, HTTPException, Security, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
+
+
+from contextlib import asynccontextmanager
 
 
 from starlette.status import (
-    HTTP_403_FORBIDDEN,
-    HTTP_400_BAD_REQUEST,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
@@ -20,68 +19,39 @@ from llmhub.router import route
 from service.chat.service_router import RouterChatCompletion
 
 
-from utils.database import get_mongo_client, insert_api_call_log
-from utils.auth import verify_token, validate_request, verify_api_key
+import asyncpg
 
 
-from pymongo import MongoClient
-from prisma import Prisma
+from utils.auth import validate_request, verify_api_key
+
 
 from pydantic_types.chat import (
     CreateChatCompletionRequest,
-    ChatCompletion,
-    ChatCompletionChoice,
-    Usage,
 )
 
 
 from dotenv import load_dotenv
 
 
+from utils.postgres import insert_api_call_log
+
+
 load_dotenv()
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global pool
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    pool = await asyncpg.create_pool(DATABASE_URL)
+
+    yield
+
+    if pool:
+        await pool.close()
 
 
-#app.add_middleware(
-#    CORSMiddleware,
-#    allow_origins=["http://localhost:7071/","https://llmhub-dv-api.azurewebsites.net/"],  
-#    allow_credentials=True,
-#    allow_methods=["*"],
-#    allow_headers=["*"],
-#)
-
-
-mongo_client: MongoClient = None
-db: Prisma = None
-
-async def start_mongo_client():
-    global mongo_client
-    mongo_client = get_mongo_client()
-    return mongo_client
-
-# Initialize Prisma client asynchronously
-async def start_prisma_client():
-    global db
-    db = Prisma()
-    await db.connect()
-    return db
-
-@app.on_event("startup")
-async def startup_event():
-    global mongo_client, db
-    mongo_client = start_mongo_client()  # MongoDB client
-    db = await start_prisma_client()     # Prisma client
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    global mongo_client, db
-    if mongo_client:
-        mongo_client.close()
-    if db:
-        await db.disconnect()
+app = FastAPI(lifespan=lifespan)
 
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
@@ -91,10 +61,21 @@ async def index(
     authorization: list = Depends(verify_api_key),
 ):
     if validation and authorization:
-        model = route(request.messages[-1].content, mongo_client).strip()
-        response = RouterChatCompletion(model=model, request=request)
-        log = await insert_api_call_log(response,authorization[0],authorization[1],db)
-        return response
+        try:
+            model = route(request.messages[-1].content, model="automatic").strip()
+            response = RouterChatCompletion(model=model, request=request)
+            await insert_api_call_log(
+                response_data=response,
+                user_id=authorization[0],
+                api_key_id=authorization[1],
+                db_pg=pool,
+            )
+
+            return response
+        except Exception as e:
+            raise HTTPException(
+                status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            )
 
 
 @app.exception_handler(HTTPException)
@@ -107,36 +88,39 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         status_code=exc.status_code,
         content={
             "type": "Error",
-            "title": "HTTP Error",
+            "title": "Request Failed",
             "status": exc.status_code,
-            "detail": "An error occurred. Please check your request and try again.",
+            "detail": (
+                exc.detail
+                if exc.detail
+                else "An unexpected error occurred. Please verify your request and try again."
+            ),
+            "instance": str(request.url),
+            "method": request.method,
+            "suggestion": "Ensure your request parameters are correct. If the issue persists, contact support: support@llmhub.dev",
         },
         headers=exc.headers,
     )
 
 
-@app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """
     Handles general exceptions.
     Returns a standardized JSON response for unhandled exceptions.
     """
+    error_id = request.headers.get("X-Request-ID", "N/A")  # If request tracking is used
+
     return JSONResponse(
         status_code=HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "type": "Error",
             "title": "Internal Server Error",
             "status": HTTP_500_INTERNAL_SERVER_ERROR,
-            "detail": "Please retry the request. If the error persists, check server logs for more detailed information or contact support: prateek@llmhub.dev",
+            "detail": "An unexpected error occurred on the server. Please try again later.",
+            "instance": str(request.url),
+            "method": request.method,
+            "error_id": error_id,
+            "support": "If the error persists, contact support: support@llmhub.dev",
         },
         headers={"Content-Type": "application/problem+json"},
     )
-
-
-@app.middleware("http")
-async def add_security_headers(request: Request, call_next):
-    response = await call_next(request)
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Content-Security-Policy"] = "default-src 'self'"
-    return response

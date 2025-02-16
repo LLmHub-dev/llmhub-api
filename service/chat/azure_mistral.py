@@ -4,6 +4,7 @@ import json
 
 AZURE_MISTRAL_API_KEY = os.getenv("AZURE_MISTRAL_API_KEY")
 AZURE_MISTRAL_ENDPOINT = os.getenv("AZURE_MISTRAL_ENDPOINT")
+AZURE_MISTRAL_MODEL = os.getenv("AZURE_MISTRAL_MODEL")
 
 
 def Azure_Mistral_Chat_Completions(request):
@@ -21,22 +22,21 @@ def Azure_Mistral_Chat_Completions(request):
     )
 
     params = {
-            "model": "mistral-nemo",
-            "messages": request.messages,
-            "temperature": request.temperature,
-            "max_tokens": request.max_completion_tokens,
-            "stop": request.stop,
-            "user": request.user,
-            "tools": request.tools,
-            "tool_choice": request.tool_choice,
-            "stream": False,  # Set to False by default
-        }
+        "model": AZURE_MISTRAL_MODEL,
+        "messages": request.messages,
+        "temperature": request.temperature,
+        "max_tokens": request.max_completion_tokens,
+        "stop": request.stop,
+        "user": request.user,
+        "tools": request.tools,
+        "tool_choice": request.tool_choice,
+        "stream": False,  # Set to False by default
+    }
 
-        # Remove keys with None values (optional parameters)
+    # Remove keys with None values (optional parameters)
     params = {k: v for k, v in params.items() if v is not None}
 
-        # API call to generate the response
+    # API call to generate the response
     response = client.chat.completions.create(**params)
-
 
     return response

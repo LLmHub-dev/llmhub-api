@@ -141,5 +141,4 @@ mongo_uri.txt
 
 #Local development
 test_local.py
-test_local_db.py
 test.py

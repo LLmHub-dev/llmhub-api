@@ -64,10 +64,7 @@ def get_custom_config(
 
 
 def get_routing_info(
-    client: MongoClient,
-    db_name: str = "Routers",
-    collection_name: str = "route-config",
-    mode: str = "automatic",
+    model: str = "automatic",
 ) -> Optional[str]:
     """
     Fetch the routing system prompt from MongoDB.
@@ -79,7 +76,7 @@ def get_routing_info(
     :raises LookupError: If system prompt is not found for the given mode.
     """
 
-    if mode == "automatic":
+    if model == "automatic":
         return """ You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
         - If the instruction is related to **coding**, output 'claude-3.5-sonnet'.
         - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
@@ -93,16 +90,6 @@ def get_routing_info(
         - 'mistral-nemo'
         - 'meta-llama'
         Now, this is the instruction:"""
-    try:
-        collection: Collection = client[db_name][collection_name]
-        result = collection.find_one({"mode": mode})
-        if result:
-            return result.get("system_prompt")
-        else:
-            raise Exception(f"No route configuration found for mode: {mode}")
-    except Exception as e:
-        logging.error(f"Error retrieving system prompt: {e}")
-        raise LookupError(f"Error retrieving system prompt: {e}")
 
 
 def write_custom_route_config(
