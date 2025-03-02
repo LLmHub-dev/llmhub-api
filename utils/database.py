@@ -8,10 +8,7 @@ from pymongo.collection import Collection
 
 
 from typing import Optional, Dict
-from prisma import Prisma
 
-
-from pydantic_types.chat import ChatCompletion
 
 logging.basicConfig(level=logging.INFO)
 
@@ -90,6 +87,8 @@ def get_routing_info(
         - 'mistral-nemo'
         - 'meta-llama'
         Now, this is the instruction:"""
+    else:
+        return None
 
 
 def write_custom_route_config(
@@ -122,42 +121,3 @@ def write_custom_route_config(
     except Exception as e:
         logging.error(f"Error writing Route Info to database: {e}")
         raise RuntimeError(f"Error writing Route Info to database: {e}")
-
-async def insert_api_call_log(
-    response_data:ChatCompletion,
-    user_id: str,
-    api_key_id: str,
-    db: Prisma
-):
-    """
-    Inserts an API call log into the database.
-
-    Parameters:
-        response_data (dict): The response data from the API (contains tokens, model, etc.).
-        user_id (str): The ID of the user making the API call.
-        api_key_id (str): The ID of the API key being used.
-        db (Prisma): The Prisma database client.
-
-    Returns:
-        dict: The inserted log data or None if an error occurred.
-    """
-    # Prepare the data to insert
-    log_data = {
-        'userId': user_id,
-        'apiKeyId': api_key_id,
-        'model_name': response_data.model,
-        'prompt_tokens': response_data.usage.prompt_tokens,
-        'completion_tokens': response_data.usage.completion_tokens,
-        'total_tokens': response_data.usage.total_tokens,
-        'credits_used': response_data.usage.total_tokens,  # To be calculated later
-    }
-
-    try:
-        api_call_log = await db.apicalllog.create(data=log_data)
-        logging.info(f"Inserted log with ID: {api_call_log.id}")
-
-        return api_call_log
-    except Exception as e:
-        # Log any errors that occur during the insertion process
-        logging.error(f"Error inserting log: {str(e)}")
-        return None  # Return None to indicate failure

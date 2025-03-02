@@ -17,6 +17,7 @@ from starlette.status import (
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
+
 security = HTTPBearer()
 
 

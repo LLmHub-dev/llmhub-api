@@ -43,6 +43,6 @@ def infer_model_gemini(user_input):
 
 
 def route(msg, model="automatic"):
-    route_info = get_routing_info(model="automatic")
+    route_info = get_routing_info(model=model)
     response_text = infer_model_gemini(route_info + " " + msg)
     return response_text
