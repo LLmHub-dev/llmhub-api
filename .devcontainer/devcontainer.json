@@ -1,0 +1,50 @@
+{
+	"name": "LLMHUB API",
+
+    // Path to the docker compose file.
+	"dockerComposeFile": [
+		"../docker-compose/devcontainer/docker-compose.yml"
+	],
+
+    // Name of the service to use for the dev container from the compose file.
+    // If you change this here be sure to update the compose file's service name as well.
+	"service": "devcontainer",
+
+	// The optional 'workspaceFolder' property is the path VS Code should open by default when
+	// connected. This is typically a file mount in .devcontainer/docker-compose.yml
+	"workspaceFolder": "/llmhub-api",
+
+	"mounts": [
+	"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+	],
+	
+	"features": {
+	"docker-from-docker": "latest"
+	},
+
+	// Configure tool-specific properties.
+	"customizations": {
+
+        // Configure options for VS Code.
+        "vscode": {
+
+            // Extensions to install when the container is created.
+            // Do note that some extensions must be installed on the host, as opposed to the container, to work.
+            "extensions": [
+                "streetsidesoftware.code-spell-checker",
+                "aaron-bond.better-comments",
+				"ms-vscode.azure-account",
+				"ms-toolsai.vscode-ai",
+				"ms-azuretools.vscode-docker",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-python.black-formatter"
+            ],
+			"settings": {
+				"python.defaultInterpreterPath": "/usr/local/bin/python"
+			}
+        }
+    }
+}
