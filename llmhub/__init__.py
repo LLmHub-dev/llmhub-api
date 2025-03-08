@@ -147,18 +147,16 @@ async def index(
         # Get completion response
         response = RouterChatCompletion(model=model, request=chat_request)
 
-        # Log API call to database
-        try:
-            await insert_api_call_log(
+        # Log API call to database asynchronously without waiting
+        from asyncio import create_task
+        create_task(
+            insert_api_call_log(
                 response_data=response,
                 user_id=authorization[0],
                 api_key_id=authorization[1],
                 db_pg=pool,
             )
-        except Exception as db_error:
-            # Log the error but don't fail the request
-            logger.error(f"Failed to log API call: {str(db_error)} (ID: {request_id})")
-            logger.error(traceback.format_exc())
+        )
 
         logger.info(f"Successfully processed chat completion (ID: {request_id})")
         return response
