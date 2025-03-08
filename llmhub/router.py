@@ -1,48 +1,89 @@
 import os
-import json
 import logging
-import google.generativeai as genai
-from utils.database import (
-    get_custom_config,
-    get_routing_info,
-    write_custom_route_config,
-)
-from utils.prompt_format import create_custom_route_config
-from dotenv import load_dotenv
+from typing import Optional
+from openai import OpenAI
+from openai.types.chat import ChatCompletion
+from utils.database import get_routing_info
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
-
-def configure_genai():
-    try:
-        genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-        logging.info("API configured successfully.")
-
-    except Exception as e:
-        logging.error(f"Failed to configure GenAI API: {e}")
-        raise
+# Configure logging
+logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
 
-def infer_model_gemini(user_input):
+def route_message(msg: str) -> Optional[str]:
     """
-    Call the Generative AI model with the system prompt and user input.
+    Route a message to the LLM model and return the response.
+    
+    Args:
+        msg: The input message to send to the model
+        
+    Returns:
+        The text response from the model or None if an error occurred
     """
-
     try:
-        configure_genai()
-        model = genai.GenerativeModel("gemini-1.5-flash-8b")
-        response = model.generate_content(user_input)
-        logging.info("Model response received successfully.")
-        return response.text
+        api_key = os.getenv("AZURE_META_API_KEY")
+        base_url = os.getenv("AZURE_META_ENDPOINT")
+        
+        if not api_key or not base_url:
+            logger.error("API key or endpoint is missing")
+            return None
+            
+        logger.info("Initializing OpenAI client")
+        client = OpenAI(api_key=api_key, base_url=base_url)
 
+        logger.debug(f"Sending message to model: {msg[:50]}...")
+        response: ChatCompletion = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant"},
+                {"role": "user", "content": msg},
+            ],
+            stream=False
+        )
+        
+        logger.info("Message processed successfully")
+        return response.choices[0].message.content
     except Exception as e:
-        logging.error(f"Error generating content with GenAI model: {e}")
-        raise
+        logger.exception(f"Error routing message: {str(e)}")
+        return None
 
 
-def route(msg, model="automatic"):
-    route_info = get_routing_info(model=model)
-    response_text = infer_model_gemini(route_info + " " + msg)
-    return response_text
+def route(msg: str, model: str = "automatic") -> Optional[str]:
+    """
+    Route a message with intelligent model selection.
+    
+    Args:
+        msg: The user message to be processed
+        model: The model to use, defaults to "automatic" for intelligent routing
+        
+    Returns:
+        The generated response text or None if an error occurred
+    """
+    try:
+        logger.info(f"Routing message with model preference: {model}")
+        
+        route_info = get_routing_info(model=model)
+        if not route_info:
+            logger.warning(f"Could not retrieve routing info for model: {model}")
+            return None
+            
+        logger.debug("Retrieved routing information successfully")
+        
+        # Combine routing information with user message
+        full_message = f"{route_info} {msg}"
+        
+        response_text = route_message(full_message)
+        
+        if response_text:
+            logger.info("Successfully routed and received response")
+            return response_text
+        else:
+            logger.error("Failed to get response from route_message")
+            return None
+    except Exception as e:
+        logger.exception(f"Error in route function: {str(e)}")
+        return None
