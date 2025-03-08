@@ -1,38 +1,21 @@
 import os
-
+import asyncpg
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 
 from contextlib import asynccontextmanager
-
-
 from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
-
-
 from llmhub.router import route
-
-
 from service.chat.service_router import RouterChatCompletion
-
-
-import asyncpg
-
-
 from utils.auth import validate_request, verify_api_key
-
-
 from pydantic_types.chat import (
     CreateChatCompletionRequest,
 )
-
-
 from dotenv import load_dotenv
-
-
 from utils.postgres import insert_api_call_log
 
 
