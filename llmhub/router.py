@@ -1,9 +1,8 @@
-import os
 import logging
 from typing import Optional
-from openai import OpenAI
+from service.chat.clients import client_pool
 from openai.types.chat import ChatCompletion
-from utils.database import get_routing_info
+from utils.prompt_format import get_routing_info
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -25,15 +24,8 @@ def route_message(msg: str) -> Optional[str]:
         The text response from the model or None if an error occurred
     """
     try:
-        api_key = os.getenv("AZURE_META_API_KEY")
-        base_url = os.getenv("AZURE_META_ENDPOINT")
-
-        if not api_key or not base_url:
-            logger.error("API key or endpoint is missing")
-            return None
-
-        logger.info("Initializing OpenAI client")
-        client = OpenAI(api_key=api_key, base_url=base_url)
+        logger.info("Getting Client")
+        client = client_pool.azure_meta_client
 
         logger.debug(f"Sending message to model: {msg[:50]}...")
         response: ChatCompletion = client.chat.completions.create(

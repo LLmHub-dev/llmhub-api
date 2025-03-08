@@ -1,9 +1,4 @@
-import os
-from openai import OpenAI
-
-AZURE_META_API_KEY = os.getenv("AZURE_META_API_KEY")
-AZURE_META_ENDPOINT = os.getenv("AZURE_META_ENDPOINT")
-AZURE_META_MODEL = os.getenv("AZURE_META_MODEL")
+from service.chat.clients import client_pool
 
 
 def Azure_Meta_Chat_Completions(request):
@@ -23,14 +18,12 @@ def Azure_Meta_Chat_Completions(request):
     Returns:
         response: The response from the Azure OpenAI chat completion API or error message.
     """
-    client = OpenAI(
-        base_url=AZURE_META_ENDPOINT,
-        api_key=AZURE_META_API_KEY,
-    )
+    # Get client from the pool instead of creating a new one
+    client = client_pool.azure_meta_client
 
     # Prepare the parameters
     params = {
-        "model": AZURE_META_MODEL,
+        "model": client_pool.azure_meta_model,
         "messages": request.messages,
         "temperature": request.temperature,
         "frequency_penalty": request.frequency_penalty,
@@ -42,7 +35,7 @@ def Azure_Meta_Chat_Completions(request):
         "stream": False,  # Set to False by default
     }
 
-    # Remove keys with None values (optional parameters)
+    # Remove None values for better performance
     params = {k: v for k, v in params.items() if v is not None}
 
     # API call to generate the response

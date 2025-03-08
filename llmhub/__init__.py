@@ -51,6 +51,12 @@ async def lifespan(app: FastAPI):
             DATABASE_URL, min_size=5, max_size=20, timeout=30
         )
         logger.info("Database connection pool established successfully")
+
+        # Pre-initialize the API client pool at application startup
+        from service.chat.clients import client_pool
+
+        logger.info("API client pool initialized successfully")
+
         yield
     except asyncpg.PostgresError as e:
         logger.error(f"Failed to connect to database: {str(e)}")
@@ -149,6 +155,7 @@ async def index(
 
         # Log API call to database asynchronously without waiting
         from asyncio import create_task
+
         create_task(
             insert_api_call_log(
                 response_data=response,

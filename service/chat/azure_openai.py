@@ -1,11 +1,4 @@
-import os
-from openai import AzureOpenAI
-import json
-
-AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_MODEL = os.getenv("AZURE_OPENAI_MODEL")
-AZURE_OPENAI_api_version = os.getenv("AZURE_OPENAI_api_version")
+from service.chat.clients import client_pool
 
 
 def Azure_OpenAI_Chat_Completions(request):
@@ -17,14 +10,10 @@ def Azure_OpenAI_Chat_Completions(request):
     Returns:
         response: The response from the Azure OpenAI chat completion API.
     """
-    client = AzureOpenAI(
-        azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        api_key=AZURE_OPENAI_API_KEY,
-        api_version=AZURE_OPENAI_api_version,
-    )
+    client = client_pool.azure_openai_client
 
     response = client.chat.completions.create(
-        model=AZURE_OPENAI_MODEL,
+        model=client_pool.azure_openai_model,
         messages=request.messages,
         temperature=request.temperature,
         top_p=request.top_p,
