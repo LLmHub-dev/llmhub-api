@@ -5,7 +5,7 @@ from pydantic_types.chat import (
 )
 
 
-def RouterChatCompletion(model: str, request: dict) -> ChatCompletion:
+def RouterChatCompletion(model: str, request: dict, client_pool) -> ChatCompletion:
     """
     Routes the request to the appropriate chat completion service based on the model.
 
@@ -17,10 +17,10 @@ def RouterChatCompletion(model: str, request: dict) -> ChatCompletion:
         ChatCompletion: The response from the chosen model's service.
     """
     if model == "gpt-4o-mini":
-        return Azure_OpenAI_Chat_Completions(request)
+        return Azure_OpenAI_Chat_Completions(request, client_pool)
     elif model == "meta-llama":
-        return Azure_Meta_Chat_Completions(request)
+        return Azure_Meta_Chat_Completions(request, client_pool)
     elif model == "claude-3.5-sonnet":
-        return Azure_OpenAI_Chat_Completions(request)
+        return Azure_OpenAI_Chat_Completions(request, client_pool)
     else:
-        return Azure_OpenAI_Chat_Completions(request)
+        return Azure_OpenAI_Chat_Completions(request, client_pool)

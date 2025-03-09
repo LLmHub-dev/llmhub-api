@@ -38,6 +38,8 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifecycle manager for the FastAPI application"""
+    global client_pool
+    client_pool = None
     global pool
     pool = None
     try:
@@ -151,7 +153,9 @@ async def index(
         logger.info(f"Selected model: {model} (ID: {request_id})")
 
         # Get completion response
-        response = RouterChatCompletion(model=model, request=chat_request)
+        response = RouterChatCompletion(
+            model=model, request=chat_request, client_pool=client_pool
+        )
 
         # Log API call to database asynchronously without waiting
         from asyncio import create_task
