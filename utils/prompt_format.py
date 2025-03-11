@@ -20,13 +20,13 @@ def get_routing_info(
         - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
         - If the instruction contains **very long context texts**, output 'gemini-1.5-flash'.
         - If the instruction is for **summarization**, output 'mistral-nemo'.
-        - For **general-purpose or friendly conversation**, output 'meta-llama'.
+        - For **general-purpose or friendly conversation**, output 'Llama-3.3-70B-Instruct'.
         Your response must strictly be one of the following with no extra characters or information:
         - 'claude-3.5-sonnet'
         - 'gpt-4o-mini'
         - 'gemini-1.5-flash'
         - 'mistral-nemo'
-        - 'meta-llama'
+        - 'Llama-3.3-70B-Instruct'
         Now, this is the instruction:"""
     else:
         return None
