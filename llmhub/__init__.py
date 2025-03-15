@@ -149,7 +149,7 @@ async def index(
 
     try:
         # Route to appropriate model based on content
-        model = route(chat_request.messages[-1].content, model="automatic").strip()
+        model = route(msg=chat_request.messages[-1].content,client_pool=client_pool, model="automatic").strip()
         logger.info(f"Selected model: {model} (ID: {request_id})")
 
         # Get completion response

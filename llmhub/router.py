@@ -1,9 +1,8 @@
 import logging
 from typing import Optional
-from service.chat.clients import client_pool
 from openai.types.chat import ChatCompletion
 from utils.prompt_format import get_routing_info
-
+from service.chat.clients import ClientPool
 # Configure logging
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -13,7 +12,7 @@ if not logger.handlers:
     )
 
 
-def route_message(msg: str) -> Optional[str]:
+def route_message(msg: str,client_pool:ClientPool) -> Optional[str]:
     """
     Route a message to the LLM model and return the response.
 
@@ -44,7 +43,7 @@ def route_message(msg: str) -> Optional[str]:
         return None
 
 
-def route(msg: str, model: str = "automatic") -> Optional[str]:
+def route(msg: str, client_pool: ClientPool, model: str = "automatic") -> Optional[str]:
     """
     Route a message with intelligent model selection.
 
@@ -68,7 +67,7 @@ def route(msg: str, model: str = "automatic") -> Optional[str]:
         # Combine routing information with user message
         full_message = f"{route_info} {msg}"
 
-        response_text = route_message(full_message)
+        response_text = route_message(msg=full_message,client_pool=client_pool)
 
         if response_text:
             logger.info("Successfully routed and received response")

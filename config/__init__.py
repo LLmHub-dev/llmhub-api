@@ -19,7 +19,7 @@ def load_config() -> Dict[str, Any]:
         "AZURE_OPENAI_API_KEY": os.getenv("AZURE_OPENAI_API_KEY", ""),
         "AZURE_OPENAI_ENDPOINT": os.getenv("AZURE_OPENAI_ENDPOINT", ""),
         "AZURE_OPENAI_MODEL": os.getenv("AZURE_OPENAI_MODEL", ""),
-        "AZURE_OPENAI_API_VERSION": os.getenv("AZURE_OPENAI_api_version", ""),
+        "AZURE_OPENAI_api_version": os.getenv("AZURE_OPENAI_api_version", ""),
         "SECRET_KEY": os.getenv("SECRET_KEY", ""),
         "ALGORITHM": os.getenv("ALGORITHM", ""),
         "AZURE_META_API_KEY": os.getenv("AZURE_META_API_KEY", ""),
