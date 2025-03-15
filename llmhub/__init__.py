@@ -16,6 +16,8 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 from llmhub.router import route
+from config import load_config
+from service.chat.clients import ClientPool
 from service.chat.service_router import RouterChatCompletion
 from utils.postgres import insert_api_call_log
 from utils.auth import validate_request, verify_api_key
@@ -42,20 +44,18 @@ async def lifespan(app: FastAPI):
     client_pool = None
     global pool
     pool = None
+    global config
+    config = dict()
     try:
+        config = load_config()
         logger.info("Initializing database connection pool")
-        DATABASE_URL = os.getenv("DATABASE_URL")
-        if not DATABASE_URL:
-            logger.error("DATABASE_URL environment variable not set")
-            raise ValueError("DATABASE_URL environment variable not set")
 
         pool = await asyncpg.create_pool(
-            DATABASE_URL, min_size=5, max_size=20, timeout=30
+            config["DATABASE_URL"], min_size=5, max_size=20, timeout=30
         )
         logger.info("Database connection pool established successfully")
 
-        # Pre-initialize the API client pool at application startup
-        from service.chat.clients import client_pool
+        client_pool = ClientPool(config)
 
         logger.info("API client pool initialized successfully")
 
