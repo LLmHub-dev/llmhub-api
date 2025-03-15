@@ -1,5 +1,6 @@
 from openai import OpenAI, AzureOpenAI
 import threading
+from decimal import Decimal
 
 
 # Thread-safe singleton pattern for clients
@@ -30,30 +31,34 @@ class ClientPool:
         self.clients = {
             config["AZURE_OPENAI_MODEL"]: {
                 "client": azure_openai_client,
-                "price_per_million_input": config[
-                    "AZURE_OPENAI_PRICE_PER_MILLION_INPUT"
-                ],
-                "price_per_million_output": config[
-                    "AZURE_OPENAI_PRICE_PER_MILLION_OUTPUT"
-                ],
+                "price_per_million_input": Decimal(
+                    str(config["AZURE_OPENAI_PRICE_PER_MILLION_INPUT"])
+                ),
+                "price_per_million_output": Decimal(
+                    str(config["AZURE_OPENAI_PRICE_PER_MILLION_OUTPUT"])
+                ),
                 "model": config["AZURE_OPENAI_MODEL"],
             },
             config["AZURE_META_MODEL"]: {
                 "client": azure_meta_client,
-                "price_per_million_input": config["AZURE_META_PRICE_PER_MILLION_INPUT"],
-                "price_per_million_output": config[
-                    "AZURE_META_PRICE_PER_MILLION_OUTPUT"
-                ],
+                "price_per_million_input": Decimal(
+                    str(config["AZURE_META_PRICE_PER_MILLION_INPUT"])
+                ),
+                "price_per_million_output": Decimal(
+                    str(config["AZURE_META_PRICE_PER_MILLION_OUTPUT"])
+                ),
                 "model": config["AZURE_META_MODEL"],
             },
-            "router":{
+            "router": {
                 "client": azure_meta_client,
-                "price_per_million_input": config["AZURE_META_PRICE_PER_MILLION_INPUT"],
-                "price_per_million_output": config[
-                    "AZURE_META_PRICE_PER_MILLION_OUTPUT"
-                ],
+                "price_per_million_input": Decimal(
+                    str(config["AZURE_META_PRICE_PER_MILLION_INPUT"])
+                ),
+                "price_per_million_output": Decimal(
+                    str(config["AZURE_META_PRICE_PER_MILLION_OUTPUT"])
+                ),
                 "model": config["AZURE_META_MODEL"],
-            }
+            },
             # Add more clients/models here as needed
         }
 

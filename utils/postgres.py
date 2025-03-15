@@ -4,9 +4,12 @@ from datetime import datetime
 from decimal import Decimal
 import logging
 from pydantic_types.chat import ChatCompletion
+from service.chat.clients import ClientPool
 
 
 async def insert_api_call_log(
+    model: str,
+    client_pool: ClientPool,
     response_data: ChatCompletion,
     user_id: str,
     api_key_id: str,
@@ -24,6 +27,21 @@ async def insert_api_call_log(
     Returns:
         dict: The inserted log data or None if an error occurred.
     """
+    client_info = client_pool.get_client_info(model)
+
+    # The actual client
+    # Pricing
+    price_input = client_info["price_per_million_input"]
+    price_output = client_info["price_per_million_output"]
+
+    cost_for_input_tokens = response_data.usage.prompt_tokens * (
+        price_input / 1_000_000
+    )
+    cost_for_output_tokens = response_data.usage.completion_tokens * (
+        price_output / 1_000_000
+    )
+    total_credits_used = cost_for_input_tokens + cost_for_output_tokens
+
     log_data = {
         "id": str(uuid.uuid4()),
         "userId": user_id,
@@ -32,8 +50,8 @@ async def insert_api_call_log(
         "prompt_tokens": response_data.usage.prompt_tokens,
         "completion_tokens": response_data.usage.completion_tokens,
         "total_tokens": response_data.usage.total_tokens,
-        "credits_used": Decimal(
-            response_data.usage.total_tokens
+        "credits_used": Decimal(total_credits_used).quantize(
+            Decimal("0.000001")
         ),  # Ensure proper decimal conversion
         "timestamp": datetime.utcnow(),  # Default timestamp
     }

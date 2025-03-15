@@ -1,5 +1,6 @@
 from service.chat.clients import ClientPool
 
+
 def Azure_Meta_Chat_Completions(request, client_pool: ClientPool, model):
     """
     Generate chat completions using the Azure Meta model.
@@ -25,8 +26,8 @@ def Azure_Meta_Chat_Completions(request, client_pool: ClientPool, model):
 
     # Prepare parameters in a single pass
     params = {
-        "model":      client_info["model"],
-        "messages":   request.messages,
+        "model": client_info["model"],
+        "messages": request.messages,
         "temperature": request.temperature,
         "frequency_penalty": request.frequency_penalty,
         "max_tokens": request.max_completion_tokens,

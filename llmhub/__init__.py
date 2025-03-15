@@ -162,6 +162,8 @@ async def index(
 
         create_task(
             insert_api_call_log(
+                model=model,
+                client_pool=client_pool,
                 response_data=response,
                 user_id=authorization[0],
                 api_key_id=authorization[1],
