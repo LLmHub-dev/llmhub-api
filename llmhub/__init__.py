@@ -1,4 +1,3 @@
-import os
 import asyncpg
 import logging
 import time
@@ -10,7 +9,6 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -32,9 +30,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("llmhub-api")
-
-# Load environment variables
-load_dotenv()
 
 
 @asynccontextmanager
@@ -137,19 +132,24 @@ async def index(
     logger.info(f"Processing chat completion request (ID: {request_id})")
 
     request_body = await request.json()
-    try:
-        chat_request = CreateChatCompletionRequest(**request_body)
-    except Exception as e:
-        logger.warning(f"Request validation failed (ID: {request_id}): {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Invalid request format: {str(e)}")
 
     if not authorization:
         logger.warning(f"Authorization failed (ID: {request_id})")
         raise HTTPException(status_code=401, detail="Invalid API key")
 
     try:
+        chat_request = CreateChatCompletionRequest(**request_body)
+    except Exception as e:
+        logger.warning(f"Request validation failed (ID: {request_id}): {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid request format: {str(e)}")
+
+    try:
         # Route to appropriate model based on content
-        model = route(msg=chat_request.messages[-1].content,client_pool=client_pool, model="automatic").strip()
+        model = route(
+            msg=chat_request.messages[-1].content,
+            client_pool=client_pool,
+            model="automatic",
+        ).strip()
         logger.info(f"Selected model: {model} (ID: {request_id})")
 
         # Get completion response

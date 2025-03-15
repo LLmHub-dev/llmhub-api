@@ -8,14 +8,14 @@ class ClientPool:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls,config):
+    def __new__(cls, config):
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(ClientPool, cls).__new__(cls)
                 cls._instance._initialize_clients(config)
             return cls._instance
 
-    def _initialize_clients(self,config):
+    def _initialize_clients(self, config):
         """Initialize all API clients once at startup"""
         # Azure OpenAI client
         self.azure_openai_client = AzureOpenAI(

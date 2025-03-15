@@ -3,6 +3,7 @@ from typing import Optional
 from openai.types.chat import ChatCompletion
 from utils.prompt_format import get_routing_info
 from service.chat.clients import ClientPool
+
 # Configure logging
 logger = logging.getLogger(__name__)
 if not logger.handlers:
@@ -12,7 +13,7 @@ if not logger.handlers:
     )
 
 
-def route_message(msg: str,client_pool:ClientPool) -> Optional[str]:
+def route_message(msg: str, client_pool: ClientPool) -> Optional[str]:
     """
     Route a message to the LLM model and return the response.
 
@@ -67,7 +68,7 @@ def route(msg: str, client_pool: ClientPool, model: str = "automatic") -> Option
         # Combine routing information with user message
         full_message = f"{route_info} {msg}"
 
-        response_text = route_message(msg=full_message,client_pool=client_pool)
+        response_text = route_message(msg=full_message, client_pool=client_pool)
 
         if response_text:
             logger.info("Successfully routed and received response")

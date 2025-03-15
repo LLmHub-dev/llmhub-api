@@ -1,6 +1,7 @@
 from service.chat.clients import ClientPool
 
-def Azure_Meta_Chat_Completions(request, client_pool:ClientPool):
+
+def Azure_Meta_Chat_Completions(request, client_pool: ClientPool):
     """Generate chat completions using the Azure Meta model.
 
     Args:
