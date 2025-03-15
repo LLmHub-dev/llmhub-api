@@ -137,7 +137,6 @@ __azurite_db*__.json
 #Keys and URI
 
 api_key.txt
-mongo_uri.txt
 
 #Local development
 test_local.py

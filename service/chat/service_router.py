@@ -17,10 +17,8 @@ def RouterChatCompletion(model: str, request: dict, client_pool) -> ChatCompleti
         ChatCompletion: The response from the chosen model's service.
     """
     if model == "gpt-4o-mini":
-        return Azure_OpenAI_Chat_Completions(request, client_pool)
+        return Azure_OpenAI_Chat_Completions(request, client_pool, model)
     elif model == "meta-llama":
-        return Azure_Meta_Chat_Completions(request, client_pool)
-    elif model == "claude-3.5-sonnet":
-        return Azure_OpenAI_Chat_Completions(request, client_pool)
+        return Azure_Meta_Chat_Completions(request, client_pool, model)
     else:
-        return Azure_OpenAI_Chat_Completions(request, client_pool)
+        return Azure_Meta_Chat_Completions(request, client_pool, model)

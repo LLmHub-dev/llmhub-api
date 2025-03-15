@@ -25,7 +25,7 @@ def route_message(msg: str, client_pool: ClientPool) -> Optional[str]:
     """
     try:
         logger.info("Getting Client")
-        client = client_pool.azure_meta_client
+        client = client_pool.get_client_info("router")["client"]
 
         logger.debug(f"Sending message to model: {msg[:50]}...")
         response: ChatCompletion = client.chat.completions.create(

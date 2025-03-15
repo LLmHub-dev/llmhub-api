@@ -1,4 +1,3 @@
-import os
 from openai import OpenAI, AzureOpenAI
 import threading
 
@@ -17,40 +16,60 @@ class ClientPool:
 
     def _initialize_clients(self, config):
         """Initialize all API clients once at startup"""
-        # Azure OpenAI client
-        self.azure_openai_client = AzureOpenAI(
+
+        azure_openai_client = AzureOpenAI(
             azure_endpoint=config["AZURE_OPENAI_ENDPOINT"],
             api_key=config["AZURE_OPENAI_API_KEY"],
             api_version=config["AZURE_OPENAI_api_version"],
         )
-        self.azure_openai_model = config["AZURE_OPENAI_MODEL"]
-
-        # Azure Meta client
-        self.azure_meta_client = OpenAI(
+        azure_meta_client = OpenAI(
             base_url=config["AZURE_META_ENDPOINT"],
             api_key=config["AZURE_META_API_KEY"],
         )
-        self.azure_meta_model = config["AZURE_META_MODEL"]
 
-    def get_client(self, provider):
+        self.clients = {
+            config["AZURE_OPENAI_MODEL"]: {
+                "client": azure_openai_client,
+                "price_per_million_input": config[
+                    "AZURE_OPENAI_PRICE_PER_MILLION_INPUT"
+                ],
+                "price_per_million_output": config[
+                    "AZURE_OPENAI_PRICE_PER_MILLION_OUTPUT"
+                ],
+                "model": config["AZURE_OPENAI_MODEL"],
+            },
+            config["AZURE_META_MODEL"]: {
+                "client": azure_meta_client,
+                "price_per_million_input": config["AZURE_META_PRICE_PER_MILLION_INPUT"],
+                "price_per_million_output": config[
+                    "AZURE_META_PRICE_PER_MILLION_OUTPUT"
+                ],
+                "model": config["AZURE_META_MODEL"],
+            },
+            "router":{
+                "client": azure_meta_client,
+                "price_per_million_input": config["AZURE_META_PRICE_PER_MILLION_INPUT"],
+                "price_per_million_output": config[
+                    "AZURE_META_PRICE_PER_MILLION_OUTPUT"
+                ],
+                "model": config["AZURE_META_MODEL"],
+            }
+            # Add more clients/models here as needed
+        }
+
+    def get_client_info(self, model_name: str = None):
         """
-        Get client and model by provider name
+        Get the configured client and pricing data for the given model name.
 
         Args:
-            provider (str): The provider name ('azure_openai', 'azure_meta', etc.)
+            model_name (str): The model name ('azure_openai_model_name', 'azure_meta_model_name', etc.)
 
         Returns:
-            tuple: (client, model_name) for the requested provider
+            dict: A dictionary with the "client" and the "price_per_million_input"/"price_per_million_output"
 
         Raises:
-            ValueError: If the provider is not supported
+            ValueError: If the model_name is not recognized
         """
-        if provider == self.azure_openai_model:
-            return self.azure_openai_client
-        elif provider == self.azure_meta_model:
-            return self.azure_meta_client
-        # Uncomment when implementing Google Gemini
-        # elif provider == "google_gemini":
-        #     return self.google_gemini_client, os.getenv("GOOGLE_GEMINI_MODEL")
-        else:
-            raise ValueError(f"Unsupported provider: {provider}")
+        if model_name not in self.clients:
+            return self.clients["router"]
+        return self.clients[model_name]
