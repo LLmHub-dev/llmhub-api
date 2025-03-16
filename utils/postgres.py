@@ -31,17 +31,20 @@ async def insert_api_call_log(
               or None if an error occurred.
     """
     client_info = client_pool.get_client_info(model)
+    router_client_info = client_pool.get_client_info("router")
 
     # Pricing details
     price_input = client_info["price_per_million_input"]
     price_output = client_info["price_per_million_output"]
+    router_price_input = router_client_info["price_per_million_input"]
+    router_price_output = router_client_info["price_per_million_output"]
 
-    cost_for_input_tokens = response_data.usage.prompt_tokens * (
-        price_input / 1_000_000
-    )
-    cost_for_output_tokens = response_data.usage.completion_tokens * (
-        price_output / 1_000_000
-    )
+    cost_for_input_tokens = (
+        response_data.usage.prompt_tokens * (price_input / 1_000_000)
+    ) + router_price_input
+    cost_for_output_tokens = (
+        response_data.usage.completion_tokens * (price_output / 1_000_000)
+    ) + router_price_output
     total_credits_used = cost_for_input_tokens + cost_for_output_tokens
 
     log_data = {
@@ -114,3 +117,43 @@ async def insert_api_call_log(
     except Exception as e:
         logging.error(f"Error in inserting log and updating credit balance: {str(e)}")
         return None
+
+async def check_user_balance(
+    db_pg: asyncpg.Pool,
+    user_id: str,
+):
+    """
+    Checks the user's credit balance in the "users" table.
+    If the balance is less than $0.50, raises a ValueError.
+
+    Parameters:
+        db_pg (asyncpg.Pool): The asyncpg pool object.
+        user_id (str): The ID of the user.
+
+    Raises:
+        ValueError: If the user is not found or the credit balance is insufficient.
+    """
+    try:
+        async with db_pg.acquire() as conn:
+            query = """
+            SELECT "creditBalance" FROM users
+            WHERE id = $1;
+            """
+            result = await conn.fetchrow(query, user_id)
+            if result is None:
+                error_msg = f"User with id not found."
+                logging.error(error_msg)
+                raise ValueError(error_msg)
+            
+            balance = result["creditBalance"]
+            if balance < Decimal("0.5"):
+                error_msg = f"Insufficient balance (${balance}). Minimum $0.50 required."
+                logging.error(error_msg)
+                raise ValueError(error_msg)
+            # If the balance is sufficient, you can simply return or continue.
+            logging.info(f"User {user_id} has sufficient balance: ${balance}")
+            return balance
+
+    except Exception as e:
+        logging.error(f"Error checking user balance: {e}")
+        raise

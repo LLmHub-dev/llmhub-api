@@ -52,10 +52,10 @@ class ClientPool:
             "router": {
                 "client": azure_meta_client,
                 "price_per_million_input": Decimal(
-                    str(config["AZURE_META_PRICE_PER_MILLION_INPUT"])
+                    str(config["ROUTER_PRICE_PER_MILLION_INPUT"])
                 ),
                 "price_per_million_output": Decimal(
-                    str(config["AZURE_META_PRICE_PER_MILLION_OUTPUT"])
+                    str(config["ROUTER_PRICE_PER_MILLION_OUTPUT"])
                 ),
                 "model": config["AZURE_META_MODEL"],
             },

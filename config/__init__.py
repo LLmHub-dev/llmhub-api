@@ -22,20 +22,23 @@ def load_config() -> Dict[str, Any]:
         "AZURE_OPENAI_api_version": os.getenv("AZURE_OPENAI_api_version", ""),
         "AZURE_OPENAI_PRICE_PER_MILLION_INPUT": os.getenv(
             "AZURE_OPENAI_PRICE_PER_MILLION_INPUT"
-        ),  # Example: $1.50 per million input tokens
+        ),
         "AZURE_OPENAI_PRICE_PER_MILLION_OUTPUT": os.getenv(
             "AZURE_OPENAI_PRICE_PER_MILLION_OUTPUT"
-        ),  # Example: $2.00 per million output tokens
+        ),
         # AZURE META API
         "AZURE_META_API_KEY": os.getenv("AZURE_META_API_KEY", ""),
         "AZURE_META_ENDPOINT": os.getenv("AZURE_META_ENDPOINT", ""),
         "AZURE_META_MODEL": os.getenv("AZURE_META_MODEL", ""),
         "AZURE_META_PRICE_PER_MILLION_INPUT": os.getenv(
             "AZURE_META_PRICE_PER_MILLION_INPUT"
-        ),  # Example: $1.80 per million input tokens
+        ),
         "AZURE_META_PRICE_PER_MILLION_OUTPUT": os.getenv(
             "AZURE_META_PRICE_PER_MILLION_OUTPUT"
-        ),  # Example: $2.20 per million output tokens
+        ),
+        # ROUTER PRICING
+        "ROUTER_PRICE_PER_MILLION_INPUT": os.getenv("ROUTER_PRICE_PER_MILLION_INPUT"),
+        "ROUTER_PRICE_PER_MILLION_OUTPUT": os.getenv("ROUTER_PRICE_PER_MILLION_OUTPUT"),
         # CONFIGURATION
         "SECRET_KEY": os.getenv("SECRET_KEY", ""),
         "ALGORITHM": os.getenv("ALGORITHM", ""),

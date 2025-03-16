@@ -17,8 +17,8 @@ from llmhub.router import route
 from config import load_config
 from service.chat.clients import ClientPool
 from service.chat.service_router import RouterChatCompletion
-from utils.postgres import insert_api_call_log
-from utils.auth import validate_request, verify_api_key
+from utils.postgres import check_user_balance, insert_api_call_log
+from utils.auth import verify_api_key
 from pydantic_types.chat import (
     CreateChatCompletionRequest,
 )
@@ -124,7 +124,6 @@ async def log_requests(request: Request, call_next):
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
     request: Request,
-    validation: bool = Depends(validate_request),
     authorization: list = Depends(verify_api_key),
 ):
     """Chat completion endpoint"""
@@ -136,6 +135,15 @@ async def index(
     if not authorization:
         logger.warning(f"Authorization failed (ID: {request_id})")
         raise HTTPException(status_code=401, detail="Invalid API key")
+
+    user_id = authorization[0]
+    api_key_id = authorization[1]
+
+    try:
+        # check_user_balance will raise a ValueError if balance is insufficient
+        balance = await check_user_balance(db_pg=pool, user_id=user_id)
+    except ValueError as ve:
+        raise HTTPException(status_code=402, detail=str(ve))
 
     try:
         chat_request = CreateChatCompletionRequest(**request_body)
@@ -165,8 +173,8 @@ async def index(
                 model=model,
                 client_pool=client_pool,
                 response_data=response,
-                user_id=authorization[0],
-                api_key_id=authorization[1],
+                user_id=user_id,
+                api_key_id=api_key_id,
                 db_pg=pool,
             )
         )
