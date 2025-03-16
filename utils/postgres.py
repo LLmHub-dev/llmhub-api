@@ -13,24 +13,26 @@ async def insert_api_call_log(
     response_data: ChatCompletion,
     user_id: str,
     api_key_id: str,
-    db_pg: asyncpg.Connection,  # Use asyncpg connection instead of AsyncSession
+    db_pg: asyncpg.Pool,  # db_pg is now an asyncpg pool
 ):
     """
-    Inserts an API call log into the database.
+    Inserts an API call log into the database and updates the user's credit balance by subtracting the credits used.
 
     Parameters:
-        response_data (ChatCompletion): The response data from the API (contains tokens, model, etc.).
+        model (str): The name of the model used.
+        client_pool (ClientPool): The pool of client configurations.
+        response_data (ChatCompletion): The response data from the API call.
         user_id (str): The ID of the user making the API call.
-        api_key_id (str): The ID of the API key being used.
-        db_pg (asyncpg.Connection): The asyncpg connection object.
+        api_key_id (str): The ID of the API key used.
+        db_pg (asyncpg.Pool): The asyncpg pool object.
 
     Returns:
-        dict: The inserted log data or None if an error occurred.
+        dict: A dictionary with the inserted log and the updated credit balance,
+              or None if an error occurred.
     """
     client_info = client_pool.get_client_info(model)
 
-    # The actual client
-    # Pricing
+    # Pricing details
     price_input = client_info["price_per_million_input"]
     price_output = client_info["price_per_million_output"]
 
@@ -50,46 +52,65 @@ async def insert_api_call_log(
         "prompt_tokens": response_data.usage.prompt_tokens,
         "completion_tokens": response_data.usage.completion_tokens,
         "total_tokens": response_data.usage.total_tokens,
-        "credits_used": Decimal(total_credits_used).quantize(
-            Decimal("0.000001")
-        ),  # Ensure proper decimal conversion
-        "timestamp": datetime.utcnow(),  # Default timestamp
+        "credits_used": Decimal(total_credits_used).quantize(Decimal("0.000001")),
+        "timestamp": datetime.utcnow(),
     }
 
     try:
-        # Insert the log into the database using asyncpg
-        insert_query = """
-        INSERT INTO api_call_logs (
-            id,"userId", "apiKeyId", model_name, 
-            prompt_tokens, completion_tokens, 
-            total_tokens, credits_used, timestamp
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9
-        ) RETURNING *;
-        """
+        # Acquire a connection from the pool and start a transaction
+        async with db_pg.acquire() as conn:
+            async with conn.transaction():
+                # Insert the API call log into the database
+                insert_query = """
+                INSERT INTO api_call_logs (
+                    id, "userId", "apiKeyId", model_name, 
+                    prompt_tokens, completion_tokens, 
+                    total_tokens, credits_used, timestamp
+                ) VALUES (
+                    $1, $2, $3, $4, $5, $6, $7, $8, $9
+                ) RETURNING *;
+                """
+                log_result = await conn.fetchrow(
+                    insert_query,
+                    log_data["id"],
+                    log_data["userId"],
+                    log_data["apiKeyId"],
+                    log_data["model_name"],
+                    log_data["prompt_tokens"],
+                    log_data["completion_tokens"],
+                    log_data["total_tokens"],
+                    log_data["credits_used"],
+                    log_data["timestamp"],
+                )
 
-        # Execute the query and fetch the result
-        result = await db_pg.fetchrow(
-            insert_query,
-            log_data["id"],
-            log_data["userId"],
-            log_data["apiKeyId"],
-            log_data["model_name"],
-            log_data["prompt_tokens"],
-            log_data["completion_tokens"],
-            log_data["total_tokens"],
-            log_data["credits_used"],
-            log_data["timestamp"],
-        )
+                if log_result:
+                    logging.info(f"Inserted log with ID: {log_result['id']}")
 
-        if result:
-            logging.info(f"Inserted log with ID: {result['userId']}")
-            return dict(result)  # Convert to dictionary
-        else:
-            logging.error("No log inserted.")
-            return None
+                    # Update the user's credit balance in the "users" table
+                    update_query = """
+                    UPDATE users
+                    SET "creditBalance" = "creditBalance" - $1
+                    WHERE id = $2
+                    RETURNING "creditBalance";
+                    """
+                    update_result = await conn.fetchrow(
+                        update_query, log_result["credits_used"], user_id
+                    )
+                    if update_result:
+                        logging.info(
+                            f"User {user_id} credit balance updated to {update_result['creditBalance']}"
+                        )
+                        return {
+                            "api_call_log": dict(log_result),
+                            "updated_credit_balance": update_result["creditBalance"],
+                        }
+                    else:
+                        logging.error(f"User not found with id: {user_id}")
+                        return dict(log_result)
+                else:
+                    logging.error("No log inserted.")
+                    return None
 
     except Exception as e:
-        # Log any errors that occur during the insertion process
-        logging.error(f"Error inserting log: {str(e)}")
+        logging.error(f"Error in inserting log and updating credit balance: {str(e)}")
         return None
