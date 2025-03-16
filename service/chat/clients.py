@@ -27,6 +27,10 @@ class ClientPool:
             base_url=config["AZURE_META_ENDPOINT"],
             api_key=config["AZURE_META_API_KEY"],
         )
+        azure_deepseek_client = OpenAI(
+            base_url=config["AZURE_DEEPSEEK_ENDPOINT"],
+            api_key=config["AZURE_DEEPSEEK_API_KEY"],
+        )
 
         self.clients = {
             config["AZURE_OPENAI_MODEL"]: {
@@ -48,6 +52,16 @@ class ClientPool:
                     str(config["AZURE_META_PRICE_PER_MILLION_OUTPUT"])
                 ),
                 "model": config["AZURE_META_MODEL"],
+            },
+            config["AZURE_DEEPSEEK_MODEL"]: {
+                "client": azure_deepseek_client,
+                "price_per_million_input": Decimal(
+                    str(config["AZURE_DEEPSEEK_PRICE_PER_MILLION_INPUT"])
+                ),
+                "price_per_million_output": Decimal(
+                    str(config["AZURE_DEEPSEEK_PRICE_PER_MILLION_OUTPUT"])
+                ),
+                "model": config["AZURE_DEEPSEEK_MODEL"],
             },
             "router": {
                 "client": azure_meta_client,

@@ -118,6 +118,7 @@ async def insert_api_call_log(
         logging.error(f"Error in inserting log and updating credit balance: {str(e)}")
         return None
 
+
 async def check_user_balance(
     db_pg: asyncpg.Pool,
     user_id: str,
@@ -144,10 +145,12 @@ async def check_user_balance(
                 error_msg = f"User with id not found."
                 logging.error(error_msg)
                 raise ValueError(error_msg)
-            
+
             balance = result["creditBalance"]
             if balance < Decimal("0.5"):
-                error_msg = f"Insufficient balance (${balance}). Minimum $0.50 required."
+                error_msg = (
+                    f"Insufficient balance (${balance}). Minimum $0.50 required."
+                )
                 logging.error(error_msg)
                 raise ValueError(error_msg)
             # If the balance is sufficient, you can simply return or continue.

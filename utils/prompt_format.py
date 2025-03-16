@@ -2,7 +2,7 @@ from typing import Optional
 
 
 def get_routing_info(
-    config:dict,
+    config: dict,
     model: str = "automatic",
 ) -> Optional[str]:
     """
