@@ -21,7 +21,7 @@ class ClientPool:
         azure_openai_client = AzureOpenAI(
             azure_endpoint=config["AZURE_OPENAI_ENDPOINT"],
             api_key=config["AZURE_OPENAI_API_KEY"],
-            api_version=config["AZURE_OPENAI_api_version"],
+            api_version=config["AZURE_OPENAI_API_VERSION"],
         )
         azure_meta_client = OpenAI(
             base_url=config["AZURE_META_ENDPOINT"],
