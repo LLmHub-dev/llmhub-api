@@ -141,7 +141,7 @@ async def index(
 
     try:
         # check_user_balance will raise a ValueError if balance is insufficient
-        balance = await check_user_balance(db_pg=pool, user_id=user_id)
+        _ = await check_user_balance(db_pg=pool, user_id=user_id)
     except ValueError as ve:
         raise HTTPException(status_code=402, detail=str(ve))
 
@@ -154,6 +154,7 @@ async def index(
     try:
         # Route to appropriate model based on content
         model = route(
+            config=config,
             msg=chat_request.messages[-1].content,
             client_pool=client_pool,
             model="automatic",

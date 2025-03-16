@@ -39,6 +39,10 @@ def load_config() -> Dict[str, Any]:
         # ROUTER PRICING
         "ROUTER_PRICE_PER_MILLION_INPUT": os.getenv("ROUTER_PRICE_PER_MILLION_INPUT"),
         "ROUTER_PRICE_PER_MILLION_OUTPUT": os.getenv("ROUTER_PRICE_PER_MILLION_OUTPUT"),
+        # ROUTER MODEL
+        "ROUTER_CODING_MODEL": os.getenv("ROUTER_CODING_MODEL", ""),
+        "ROUTER_LOGICAL_MODEL": os.getenv("ROUTER_LOGICAL_MODEL", ""),
+        "ROUTER_CONVERSATION_MODEL": os.getenv("ROUTER_CONVERSATION_MODEL", ""),
         # CONFIGURATION
         "SECRET_KEY": os.getenv("SECRET_KEY", ""),
         "ALGORITHM": os.getenv("ALGORITHM", ""),

@@ -44,7 +44,7 @@ def route_message(msg: str, client_pool: ClientPool) -> Optional[str]:
         return None
 
 
-def route(msg: str, client_pool: ClientPool, model: str = "automatic") -> Optional[str]:
+def route(config:dict, msg: str, client_pool: ClientPool, model: str = "automatic") -> Optional[str]:
     """
     Route a message with intelligent model selection.
 
@@ -58,7 +58,7 @@ def route(msg: str, client_pool: ClientPool, model: str = "automatic") -> Option
     try:
         logger.info(f"Routing message with model preference: {model}")
 
-        route_info = get_routing_info(model=model)
+        route_info = get_routing_info(config=config,model=model)
         if not route_info:
             logger.warning(f"Could not retrieve routing info for model: {model}")
             return None

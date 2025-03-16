@@ -2,6 +2,7 @@ from typing import Optional
 
 
 def get_routing_info(
+    config:dict,
     model: str = "automatic",
 ) -> Optional[str]:
     """
@@ -15,18 +16,14 @@ def get_routing_info(
     """
 
     if model == "automatic":
-        return """ You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
-        - If the instruction is related to **coding**, output 'gpt-4o-mini'.
-        - If the instruction involves **logical reasoning or complexity**, output 'gpt-4o-mini'.
-        - If the instruction contains **very long context texts**, output 'gemini-1.5-flash'.
-        - If the instruction is for **summarization**, output 'mistral-nemo'.
-        - For **general-purpose or friendly conversation**, output 'Llama-3.3-70B-Instruct'.
+        return f""" You are a routing agent responsible for selecting the appropriate model based on the instruction type. Follow these guidelines:
+        - If the instruction is related to **coding**, output {config["ROUTER_CODING_MODEL"]}.
+        - If the instruction involves **advanced logical reasoning or complexity**, output {config["ROUTER_LOGICAL_MODEL"]}.
+        - For **general-purpose or friendly conversation**, output {config["ROUTER_CONVERSATION_MODEL"]}.
         Your response must strictly be one of the following with no extra characters or information:
-        - 'gpt-4o-mini'
-        - 'gpt-4o-mini'
-        - 'gemini-1.5-flash'
-        - 'mistral-nemo'
-        - 'Llama-3.3-70B-Instruct'
+        - {config["ROUTER_CODING_MODEL"]}
+        - {config["ROUTER_LOGICAL_MODEL"]}
+        - {config["ROUTER_CONVERSATION_MODEL"]}
         Now, this is the instruction:"""
     else:
         return None
