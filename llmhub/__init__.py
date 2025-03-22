@@ -192,6 +192,46 @@ async def index(
         )
 
 
+@app.get("/v1/models")
+async def list_models(request: Request):
+    """
+    Lists all available models from the configured client pool.
+    Returns a standardized JSON response with model information.
+    """
+    request_id = getattr(request.state, "request_id", "unknown")
+    logger.info(f"Request for model listing (ID: {request_id})")
+    
+    try:
+        # Skip the router since it's an internal model
+        models = [
+            {
+                "id": model_name,
+                "object": "model",
+                "created": int(time.time()),  # Current timestamp in seconds
+                "owned_by": "llmhub",
+                "pricing": {
+                    "input": float(info["price_per_million_input"]) / 1000000,  # Per token cost
+                    "output": float(info["price_per_million_output"]) / 1000000  # Per token cost
+                }
+            }
+            for model_name, info in client_pool.clients.items()
+            if model_name != "router"  # Exclude the router model
+        ]
+        
+        return {
+            "object": "list",
+            "data": models,
+            "request_id": request_id
+        }
+    except Exception as e:
+        logger.error(f"Error listing models: {str(e)} (ID: {request_id})")
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving model list: {str(e)}",
+        )
+
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """
