@@ -193,14 +193,18 @@ async def index(
 
 
 @app.get("/v1/models")
-async def list_models(request: Request):
+async def list_models(request: Request, authorization: list = Depends(verify_api_key)):
     """
     Lists all available models from the configured client pool.
     Returns a standardized JSON response with model information.
     """
     request_id = getattr(request.state, "request_id", "unknown")
     logger.info(f"Request for model listing (ID: {request_id})")
-    
+
+    if not authorization:
+        logger.warning(f"Authorization failed (ID: {request_id})")
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
     try:
         # Skip the router since it's an internal model
         models = [
@@ -210,19 +214,17 @@ async def list_models(request: Request):
                 "created": int(time.time()),  # Current timestamp in seconds
                 "owned_by": "llmhub",
                 "pricing": {
-                    "input": float(info["price_per_million_input"]) / 1000000,  # Per token cost
-                    "output": float(info["price_per_million_output"]) / 1000000  # Per token cost
-                }
+                    "input": float(info["price_per_million_input"])
+                    / 1000000,  # Per token cost
+                    "output": float(info["price_per_million_output"])
+                    / 1000000,  # Per token cost
+                },
             }
             for model_name, info in client_pool.clients.items()
             if model_name != "router"  # Exclude the router model
         ]
-        
-        return {
-            "object": "list",
-            "data": models,
-            "request_id": request_id
-        }
+
+        return {"object": "list", "data": models, "request_id": request_id}
     except Exception as e:
         logger.error(f"Error listing models: {str(e)} (ID: {request_id})")
         logger.error(traceback.format_exc())
