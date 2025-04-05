@@ -5,7 +5,7 @@ import traceback
 import uuid
 
 from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -295,9 +295,14 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Add health check endpoint
 @app.get("/health")
-async def health_check(request: Request):
+async def health_check(request: Request, authorization: list = Depends(verify_api_key)):
     """Health check endpoint for monitoring"""
     request_id = getattr(request.state, "request_id", "unknown")
+
+    if not authorization:
+        logger.warning(f"Authorization failed (ID: {request_id})")
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
     try:
         # Verify database connection is working
         if "pool" in globals() and pool:
