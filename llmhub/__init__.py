@@ -5,9 +5,7 @@ import traceback
 import uuid
 
 from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 
 from contextlib import asynccontextmanager
 from starlette.status import (
@@ -78,50 +76,6 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
-
-# Add middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"],
-)
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """Middleware to log request/response details and add request ID"""
-    request_id = str(uuid.uuid4())
-    request.state.request_id = request_id
-    start_time = time.time()
-
-    logger.info(
-        f"Request started: {request.method} {request.url.path} (ID: {request_id})"
-    )
-
-    try:
-        response = await call_next(request)
-        process_time = time.time() - start_time
-        response.headers["X-Request-ID"] = request_id
-        logger.info(
-            f"Request completed: {request.method} {request.url.path} "
-            f"(ID: {request_id}) - Status: {response.status_code} - Time: {process_time:.3f}s"
-        )
-        return response
-    except Exception as e:
-        process_time = time.time() - start_time
-        logger.error(
-            f"Request failed: {request.method} {request.url.path} "
-            f"(ID: {request_id}) - Error: {str(e)} - Time: {process_time:.3f}s"
-        )
-        logger.error(traceback.format_exc())
-        return JSONResponse(
-            status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "Internal server error", "request_id": request_id},
-        )
-
 
 @app.api_route("/v1/chat/completions", methods=["POST"])
 async def index(
